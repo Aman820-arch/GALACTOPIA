@@ -43,7 +43,7 @@ export default function Home({ movies, setSelectedMovie }) {
                       {movie.title}
                     </h4>
                     <div className="text-[10px] text-zinc-500 font-medium">
-                      RELEASED // {movie.year}
+                      RELEASED • {movie.year}
                     </div>
                   </div>
                 </div>

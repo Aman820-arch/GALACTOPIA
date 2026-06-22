@@ -51,7 +51,7 @@ export default function Preloader({ onComplete }) {
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(to_right,#00ffcc_1px,transparent_1px),linear-gradient(to_bottom,#00ffcc_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
 
       <div className="flex justify-between items-center w-full text-[10px] text-zinc-600 tracking-widest relative z-10">
-        <div>SYS.LOC // GALACTIC_CORE</div>
+        <div>SYS.LOC • GALACTIC_CORE</div>
         <div className="flex items-center gap-2">
           <span className="w-1.5 h-1.5 bg-[#00ffcc] rounded-full animate-pulse shadow-[0_0_8px_#00ffcc]" />
           <span className="text-[#00ffcc]">SYS_DECRYPT_ACTIVE</span>

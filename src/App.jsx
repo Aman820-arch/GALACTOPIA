@@ -9,18 +9,23 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import Genres from './pages/Genres';
 import Search from './pages/Search';
+import Contact from './pages/Contact';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 export default function App() {
   const [showLoader, setShowLoader] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [movies, setMovies] = useState([]);
+  
+  // Independent layout data pools
+  const [trendingMovies, setTrendingMovies] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
   const [activeGenreLabel, setActiveGenreLabel] = useState("");
 
-  // Base Trigger: Mount trending records on baseline home load
+  // Permanently lock trending records for the Home screen marquee
   useEffect(() => {
     const fetchTrending = async () => {
       if (!TMDB_API_KEY) return;
@@ -38,7 +43,8 @@ export default function App() {
             poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
             color: "from-amber-500/20 via-purple-600/5 to-transparent"
           }));
-          setMovies(formatted);
+          setTrendingMovies(formatted);
+          setSearchResults(formatted); // Initial state population for search
         }
       } catch (err) {
         console.error("Failed connecting to TMDB matrix:", err);
@@ -47,10 +53,13 @@ export default function App() {
     fetchTrending();
   }, []);
 
-  // Live Mutation Core: Tracks characters keyed inside the Search page
+  // Live Search Input Streams
   useEffect(() => {
-    if (!searchQuery.trim()) return;
-    setActiveGenreLabel(""); // Reset explicit genre label if typing custom search criteria
+    if (!searchQuery.trim()) {
+      if (trendingMovies.length > 0) setSearchResults(trendingMovies);
+      return;
+    }
+    setActiveGenreLabel(""); 
     
     const delayDebounce = setTimeout(async () => {
       if (!TMDB_API_KEY) return;
@@ -69,7 +78,7 @@ export default function App() {
             poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
             color: "from-red-500/20 via-amber-600/5 to-transparent"
           }));
-          setMovies(searched);
+          setSearchResults(searched);
         }
       } catch (err) {
         console.error("Failed querying live search stream:", err);
@@ -79,14 +88,14 @@ export default function App() {
     }, 600);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchQuery]);
+  }, [searchQuery, trendingMovies]);
 
-  // Genre Filtering Hook: Pulls records filtered strictly by categorical genre IDs
+  // Genre Discovery Engine Fetch Hook
   const fetchGenreSector = async (genreId, label) => {
     if (!TMDB_API_KEY) return;
     setIsLoadingFeeds(true);
     setActiveGenreLabel(label);
-    setSearchQuery(""); // Wipe textual search state to cleanly isolate the selected category
+    setSearchQuery(""); 
     try {
       const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}`);
       const data = await res.json();
@@ -101,7 +110,7 @@ export default function App() {
           poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
           color: "from-purple-500/20 via-amber-600/5 to-transparent"
         }));
-        setMovies(genreMovies);
+        setSearchResults(genreMovies);
       }
     } catch (err) {
       console.error("Failed executing genre parameter query:", err);
@@ -128,23 +137,24 @@ export default function App() {
         }`}>
           
           <Routes>
-            <Route path="/" element={<Home movies={movies} setSelectedMovie={setSelectedMovie} />} />
+            <Route path="/" element={<Home movies={trendingMovies} setSelectedMovie={setSelectedMovie} />} />
             <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
             <Route path="/search" element={
               <Search 
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
-                movies={movies}
+                movies={searchResults}
                 setSelectedMovie={setSelectedMovie}
                 isLoadingFeeds={isLoadingFeeds}
                 activeSectorLabel={activeGenreLabel}
               />
             } />
+            <Route path="/contact" element={<Contact />} />
           </Routes>
 
-          <footer className="pt-6 border-t border-white/[0.03] text-[9px] text-zinc-600 tracking-wider flex justify-between">
-            <div>© GALACTOPIA HUB</div>
-            <div>POWERED BY TMDB ENGINE</div>
+          <footer className="pt-6 border-t border-white/[0.03] text-[9px] text-zinc-600 tracking-wider flex justify-between uppercase font-medium">
+            <div>© Galactopia Hub</div>
+            <div>Powered by TMDB Engine</div>
           </footer>
           
         </div>

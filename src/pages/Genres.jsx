@@ -65,7 +65,7 @@ export default function Genres({ onSelectGenre }) {
                 {genre.label}
               </h4>
               <span className="text-[9px] font-mono text-zinc-600 group-hover:text-zinc-400 mt-4 transition-colors block">
-                ID // {genre.id}
+                ID: {genre.id}
               </span>
             </div>
           ))}
@@ -74,7 +74,7 @@ export default function Genres({ onSelectGenre }) {
 
       <section className="p-6 rounded-2xl border border-white/[0.03] bg-[#0c0c12]/20 flex justify-between items-center">
         <span className="text-[10px] text-zinc-500 font-mono tracking-widest">
-          {isLoading ? "SYNCING MATRIX..." : `LIVE SYSTEM OPERATIONAL // ${genres.length} TARGETS FOUND`}
+          {isLoading ? "SYNCING MATRIX..." : `LIVE SYSTEM OPERATIONAL [ ${genres.length} TARGETS ]`}
         </span>
         <div className="flex items-center gap-2">
           <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />

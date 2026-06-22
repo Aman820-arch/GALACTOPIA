@@ -1,14 +1,15 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Film, Layers, Search } from 'lucide-react';
+import { Film, Layers, Search, Mail } from 'lucide-react';
 
 export default function Navbar() {
   const location = useLocation();
   
   const navItems = [
     { icon: <Film size={18} />, label: 'HOME', path: '/' },
-    { icon: <Layers size={18} />, label: 'GENRES', path: '/genres' }, // Changed path and label
+    { icon: <Layers size={18} />, label: 'GENRES', path: '/genres' },
     { icon: <Search size={18} />, label: 'SEARCH', path: '/search' },
+    { icon: <Mail size={18} />, label: 'CONTACT', path: '/contact' },
   ];
 
   return (

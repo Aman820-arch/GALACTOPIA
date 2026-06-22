@@ -5,7 +5,7 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="space-y-2">
         <h2 className="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">
-          {activeSectorLabel ? `SECTOR // ${activeSectorLabel}` : 'GLOBAL SEARCH'}
+          {activeSectorLabel ? `GENRE: ${activeSectorLabel}` : 'GLOBAL SEARCH'}
         </h2>
         <p className="text-zinc-400 text-sm">Query the TMDB database for specific cinematic records.</p>
       </header>
