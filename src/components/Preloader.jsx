@@ -28,16 +28,15 @@ export default function Preloader({ onComplete }) {
         clearInterval(interval);
         setTimeout(() => {
           setIsExiting(true);
-        }, 800); // Gives user a moment to appreciate the fully unlocked brand name
+        }, 800);
       }
     }, 45);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Handle the unmounting exactly when the curtain leaves the screen layout
-  const handleAnimationEnd = (e) => {
-    if (e.animationName === 'slideUpOut') {
+  const handleAnimationEnd = () => {
+    if (isExiting) {
       onComplete();
     }
   };
@@ -49,19 +48,16 @@ export default function Preloader({ onComplete }) {
         isExiting ? 'animate-curtain' : ''
       }`}
     >
-      {/* Background Cyber Grid */}
       <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[linear-gradient(to_right,#00ffcc_1px,transparent_1px),linear-gradient(to_bottom,#00ffcc_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
 
-      {/* Meta Headers */}
       <div className="flex justify-between items-center w-full text-[10px] text-zinc-600 tracking-widest relative z-10">
         <div>SYS.LOC // GALACTIC_CORE</div>
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 bg-[#00ffcc] rounded-full animate-ping"></span>
+          <span className="w-1.5 h-1.5 bg-[#00ffcc] rounded-full animate-pulse shadow-[0_0_8px_#00ffcc]" />
           <span className="text-[#00ffcc]">SYS_DECRYPT_ACTIVE</span>
         </div>
       </div>
 
-      {/* Massive Typography Layout */}
       <div className="relative w-full text-center my-auto z-10">
         <div className="absolute inset-0 flex items-center justify-center text-[12vw] font-black tracking-tighter text-stroke uppercase opacity-40 selection:bg-transparent">
           {targetText}
@@ -72,7 +68,6 @@ export default function Preloader({ onComplete }) {
         </h1>
       </div>
 
-      {/* Terminal Footer Logs */}
       <div className="flex justify-between items-end w-full relative z-10">
         <div className="text-xs text-zinc-500 max-w-xs space-y-1">
           <p className="text-zinc-400">&gt; INITIALIZING STREAM ENGINES</p>

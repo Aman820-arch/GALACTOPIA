@@ -1,49 +1,121 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Structure Components
 import Preloader from './components/Preloader';
+import MovieDetail from './components/MovieDetail';
+import UniqueLiquidBackground from './components/UniqueLiquidBackground';
+import Navbar from './components/Navbar';
+
+// Page Views
+import Home from './pages/Home';
+import Sectors from './pages/Sectors';
+
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 export default function App() {
   const [showLoader, setShowLoader] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [movies, setMovies] = useState([]);
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
+
+  useEffect(() => {
+    const fetchTrending = async () => {
+      if (!TMDB_API_KEY) return;
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_API_KEY}`);
+        const data = await res.json();
+        if (data.results) {
+          const formatted = data.results.map(m => ({
+            id: m.id,
+            title: m.title,
+            tags: m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : '0.0',
+            year: m.release_date ? m.release_date.split('-')[0] : 'N/A',
+            rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
+            overview: m.overview,
+            poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
+            color: "from-amber-500/20 via-purple-600/5 to-transparent"
+          }));
+          setMovies(formatted);
+        }
+      } catch (err) {
+        console.error("Failed connecting to TMDB backend matrix:", err);
+      }
+    };
+    fetchTrending();
+  }, []);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) return;
+    
+    const delayDebounce = setTimeout(async () => {
+      if (!TMDB_API_KEY) return;
+      setIsLoadingFeeds(true);
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        if (data.results) {
+          const searched = data.results.map(m => ({
+            id: m.id,
+            title: m.title,
+            tags: m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : '0.0',
+            year: m.release_date ? m.release_date.split('-')[0] : 'N/A',
+            rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
+            overview: m.overview,
+            poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
+            color: "from-red-500/20 via-amber-600/5 to-transparent"
+          }));
+          setMovies(searched);
+        }
+      } catch (err) {
+        console.error("Failed querying data channels:", err);
+      } finally {
+        setIsLoadingFeeds(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white relative overflow-x-hidden">
-      {/* Preloader sits on top and self-destructs when its slide animation ends */}
-      {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
-      
-      {/* Dashboard container with smooth delay blur reveal */}
-      <div className={`p-8 max-w-7xl mx-auto w-full min-h-screen flex flex-col justify-between ${
-        !showLoader ? 'opacity-100' : 'animate-platform-reveal'
-      }`}>
-        <header className="flex justify-between items-center py-8 border-b border-zinc-900">
-          <h2 className="text-xl font-bold tracking-widest text-[#00ffcc] [text-shadow:0_0_12px_rgba(0,255,204,0.3)]">
-            GALACTOPIA.
-          </h2>
-          <nav className="space-x-8 text-xs tracking-widest text-zinc-500 font-mono">
-            <a href="#movies" className="hover:text-white transition-colors duration-300">&gt; MOVIES</a>
-            <a href="#series" className="hover:text-white transition-colors duration-300">&gt; SERIES</a>
-            <a href="#terminal" className="hover:text-white transition-colors duration-300">&gt; TERMINAL</a>
-          </nav>
-        </header>
+    <Router>
+      <div className="min-h-screen bg-[#020204] text-white relative overflow-x-hidden selection:bg-amber-500/30 selection:text-white pl-0 md:pl-20">
+        
+        <UniqueLiquidBackground />
+        <Navbar />
 
-        <main className="my-auto py-20">
-          <p className="text-zinc-600 font-mono text-xs tracking-[0.4em] mb-4">
-            SYSTEM_STATUS_ONLINE // OVERRIDE_OK
-          </p>
-          <h3 className="text-7xl font-black tracking-tight max-w-4xl uppercase leading-none mb-6">
-            A New Horizon in <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-400 to-zinc-800">
-              Cinematic Navigation.
-            </span>
-          </h3>
-          <p className="text-zinc-500 max-w-md font-mono text-xs leading-relaxed">
-            Direct interface established. Accessing streaming mainframes across isolated sectors.
-          </p>
-        </main>
+        {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
+        
+        {selectedMovie && (
+          <MovieDetail movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
+        )}
 
-        <footer className="py-6 border-t border-zinc-900 text-[10px] text-zinc-600 font-mono flex justify-between">
-          <div>© 2026 GALACTOPIA CORE</div>
-          <div>SECURE_CONNECTION // TLS_1.3</div>
-        </footer>
+        <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${
+          !showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
+          
+          {/* Dynamic Core Switch Routing */}
+          <Routes>
+            <Route path="/" element={
+              <Home 
+                searchQuery={searchQuery} 
+                setSearchQuery={setSearchQuery} 
+                movies={movies} 
+                setSelectedMovie={setSelectedMovie} 
+                isLoadingFeeds={isLoadingFeeds} 
+              />
+            } />
+            <Route path="/sectors" element={<Sectors />} />
+          </Routes>
+
+          <footer className="pt-6 border-t border-white/[0.03] text-[9px] text-zinc-600 tracking-wider flex justify-between">
+            <div>© GALACTOPIA HUB</div>
+            <div>POWERED BY TMDB ENGINE</div>
+          </footer>
+          
+        </div>
       </div>
-    </div>
+    </Router>
   );
 }
