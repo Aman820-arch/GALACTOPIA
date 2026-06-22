@@ -1,8 +1,8 @@
 import React from 'react';
 
-export default function Home({ searchQuery, setSearchQuery, movies, setSelectedMovie, isLoadingFeeds }) {
+export default function Home({ movies, setSelectedMovie }) {
   return (
-    <div className="space-y-16">
+    <div className="space-y-16 animate-in fade-in duration-500">
       <header className="max-w-2xl space-y-4">
         <h1 className="text-sm font-black tracking-[0.4em] text-amber-500 uppercase">GALACTOPIA</h1>
         <h2 className="text-4xl md:text-6xl font-black tracking-tight uppercase leading-[1.1]">
@@ -11,24 +11,6 @@ export default function Home({ searchQuery, setSearchQuery, movies, setSelectedM
             without limits.
           </span>
         </h2>
-
-        <div className="w-full max-w-xl relative group pt-4">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/10 to-purple-500/10 rounded-xl blur opacity-30 group-focus-within:opacity-100 transition duration-300" />
-          <div className="relative flex items-center bg-[#09090d]/90 border border-white/[0.05] rounded-xl px-4 py-3.5 group-focus-within:border-amber-500/30 transition-colors">
-            <input 
-              type="text"
-              placeholder="Search movies, genres, franchises..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent w-full focus:outline-none text-xs tracking-wide text-zinc-200 placeholder-zinc-600 font-medium"
-            />
-            {isLoadingFeeds && (
-              <span className="text-[10px] tracking-widest text-amber-500 animate-pulse font-mono font-bold">
-                LOADING
-              </span>
-            )}
-          </div>
-        </div>
       </header>
 
       <section className="space-y-6">
