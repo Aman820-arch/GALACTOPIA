@@ -1,7 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function Sectors() {
-  const categories = ["ACTION", "SCI-FI", "DRAMA", "THRILLER", "DOCUMENTARY", "ANIMATION"];
+// Official TMDB API genre mappings
+const SECTOR_GENRES = [
+  { label: "ACTION", id: 28 },
+  { label: "SCI-FI", id: 878 },
+  { label: "DRAMA", id: 18 },
+  { label: "THRILLER", id: 53 },
+  { label: "ANIMATION", id: 16 },
+  { label: "HORROR", id: 27 }
+];
+
+export default function Sectors({ onSelectGenre }) {
+  const navigate = useNavigate();
+
+  const handleSectorClick = (genre) => {
+    onSelectGenre(genre.id, genre.label);
+    navigate('/search'); // Delivers the user straight into the layout results matrix
+  };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
@@ -10,17 +26,21 @@ export default function Sectors() {
         <p className="text-zinc-400 text-sm">Navigate the cinematic archives by categorization clusters.</p>
       </header>
 
-      {/* Genre Grid */}
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {categories.map((cat) => (
-          <div key={cat} className="group border border-white/[0.05] bg-[#0c0c12]/40 p-6 rounded-2xl hover:border-amber-500/30 cursor-pointer transition-all">
-            <h4 className="text-sm font-bold text-zinc-300 group-hover:text-amber-500 transition-colors">{cat}</h4>
-            <span className="text-[10px] text-zinc-600">BROWSE ARCHIVE →</span>
+        {SECTOR_GENRES.map((sector) => (
+          <div 
+            key={sector.id} 
+            onClick={() => handleSectorClick(sector)}
+            className="group border border-white/[0.05] bg-[#0c0c12]/40 p-6 rounded-2xl hover:border-amber-500/30 cursor-pointer transition-all duration-300"
+          >
+            <h4 className="text-sm font-bold text-zinc-300 group-hover:text-amber-500 transition-colors">
+              {sector.label}
+            </h4>
+            <span className="text-[10px] text-zinc-600 block mt-1">BROWSE ARCHIVE →</span>
           </div>
         ))}
       </section>
 
-      {/* System Status - Cleaned Up */}
       <section className="p-6 rounded-2xl border border-white/[0.03] bg-[#0c0c12]/20 flex justify-between items-center">
         <span className="text-[10px] text-zinc-500 font-mono tracking-widest">SYSTEM STATUS: OPERATIONAL</span>
         <div className="flex items-center gap-2">

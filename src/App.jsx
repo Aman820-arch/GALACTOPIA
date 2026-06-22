@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-// Structure Components
 import Preloader from './components/Preloader';
 import MovieDetail from './components/MovieDetail';
 import UniqueLiquidBackground from './components/UniqueLiquidBackground';
 import Navbar from './components/Navbar';
 
-// Page Views
 import Home from './pages/Home';
 import Sectors from './pages/Sectors';
+import Search from './pages/Search'; // <-- Injected new view sheet
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -19,7 +18,9 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
+  const [activeSectorLabel, setActiveSectorLabel] = useState("");
 
+  // Base Trigger: Mount trending records on baseline load
   useEffect(() => {
     const fetchTrending = async () => {
       if (!TMDB_API_KEY) return;
@@ -40,14 +41,16 @@ export default function App() {
           setMovies(formatted);
         }
       } catch (err) {
-        console.error("Failed connecting to TMDB backend matrix:", err);
+        console.error("Failed connecting to TMDB matrix:", err);
       }
     };
     fetchTrending();
   }, []);
 
+  // Live Mutation Core: Tracks characters keyed inside Search sheet
   useEffect(() => {
     if (!searchQuery.trim()) return;
+    setActiveSectorLabel(""); // Reset explicit sector text if typing custom letters
     
     const delayDebounce = setTimeout(async () => {
       if (!TMDB_API_KEY) return;
@@ -69,7 +72,7 @@ export default function App() {
           setMovies(searched);
         }
       } catch (err) {
-        console.error("Failed querying data channels:", err);
+        console.error("Failed querying live search stream:", err);
       } finally {
         setIsLoadingFeeds(false);
       }
@@ -77,6 +80,35 @@ export default function App() {
 
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
+
+  // Sector Matrix Hook: Pulls records filtered strictly by standard genre parameters
+  const fetchGenreSector = async (genreId, label) => {
+    if (!TMDB_API_KEY) return;
+    setIsLoadingFeeds(true);
+    setActiveSectorLabel(label);
+    setSearchQuery(""); // Wipe written search query words to isolate sector focus cleanly
+    try {
+      const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}`);
+      const data = await res.json();
+      if (data.results) {
+        const sectorMovies = data.results.map(m => ({
+          id: m.id,
+          title: m.title,
+          tags: m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : '0.0',
+          year: m.release_date ? m.release_date.split('-')[0] : 'N/A',
+          rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
+          overview: m.overview,
+          poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
+          color: "from-purple-500/20 via-amber-600/5 to-transparent"
+        }));
+        setMovies(sectorMovies);
+      }
+    } catch (err) {
+      console.error("Failed executing sector query override:", err);
+    } finally {
+      setIsLoadingFeeds(false);
+    }
+  };
 
   return (
     <Router>
@@ -95,18 +127,19 @@ export default function App() {
           !showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           
-          {/* Dynamic Core Switch Routing */}
           <Routes>
-            <Route path="/" element={
-              <Home 
-                searchQuery={searchQuery} 
-                setSearchQuery={setSearchQuery} 
-                movies={movies} 
-                setSelectedMovie={setSelectedMovie} 
-                isLoadingFeeds={isLoadingFeeds} 
+            <Route path="/" element={<Home movies={movies} setSelectedMovie={setSelectedMovie} />} />
+            <Route path="/sectors" element={<Sectors onSelectGenre={fetchGenreSector} />} />
+            <Route path="/search" element={
+              <Search 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                movies={movies}
+                setSelectedMovie={setSelectedMovie}
+                isLoadingFeeds={isLoadingFeeds}
+                activeSectorLabel={activeSectorLabel}
               />
             } />
-            <Route path="/sectors" element={<Sectors />} />
           </Routes>
 
           <footer className="pt-6 border-t border-white/[0.03] text-[9px] text-zinc-600 tracking-wider flex justify-between">
