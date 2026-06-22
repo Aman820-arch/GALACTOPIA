@@ -2,12 +2,11 @@ import React, { useEffect, useRef } from 'react';
 
 export default function UniqueLiquidBackground() {
   const canvasRef = useRef(null);
-  // Track location, momentum, and an internal wave clock
   const stateRef = useRef({ 
     x: -1000, y: -1000, 
     targetX: -1000, targetY: -1000,
-    speed: 0, lastX: 0, lastY: 0,
-    cycle: 0 
+    vx: 0, vy: 0, // Velocity vector components
+    tearIntensity: 0
   });
 
   useEffect(() => {
@@ -25,19 +24,28 @@ export default function UniqueLiquidBackground() {
     };
     window.addEventListener('resize', handleResize);
 
+    let lastTime = performance.now();
+
     const handleMouseMove = (e) => {
       const state = stateRef.current;
       state.targetX = e.clientX;
       state.targetY = e.clientY;
       
-      // Calculate instantaneous speed to fuel the ripple displacement amplitude
-      const dx = e.clientX - state.lastX;
-      const dy = e.clientY - state.lastY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      state.speed = Math.min(dist * 1.5, 120); // Clamp maximum distortion burst
+      const now = performance.now();
+      const dt = Math.max(now - lastTime, 1);
+      lastTime = now;
+
+      // Calculate direction and speed of the tear
+      const dx = e.clientX - (state.x === -1000 ? e.clientX : state.x);
+      const dy = e.clientY - (state.y === -1000 ? e.clientY : state.y);
       
-      state.lastX = e.clientX;
-      state.lastY = e.clientY;
+      // Calculate continuous structural shear force
+      state.vx = dx / dt;
+      state.vy = dy / dt;
+      const moveSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
+      
+      // Surge the tear magnitude depending on fast slash gestures
+      state.tearIntensity = Math.min(state.tearIntensity + moveSpeed * 4, 150);
     };
 
     const handleMouseLeave = () => {
@@ -48,104 +56,123 @@ export default function UniqueLiquidBackground() {
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
 
-    const gridSize = 45; // slightly tighter cell blocks for crisper warp resolution
+    const gridSize = 40; // Tight matrix mesh coordinates
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-
       const state = stateRef.current;
-      // Interpolation (lerp) for smooth tracking action
-      state.x += (state.targetX - state.x) * 0.08;
-      state.y += (state.targetY - state.y) * 0.08;
-      // Decay speed over time so ripple settles when cursor stops moving
-      state.speed += (0 - state.speed) * 0.05;
-      // Increment kinetic wave cycle
-      state.cycle += 0.04;
 
-      const maxDist = 220; // Radius of influence around cursor
+      // Track cursor position with stiff, high-performance tracking
+      state.x += (state.targetX - state.x) * 0.15;
+      state.y += (state.targetY - state.y) * 0.15;
+      
+      // Decay the space tear energy so it snaps back like elastic
+      state.tearIntensity *= 0.92;
+      state.vx *= 0.9;
+      state.vy *= 0.9;
 
-      // Draw Vertical Lines
+      const tearRadius = 180;
+
+      // Loop over grid points to simulate spatial warping
       for (let x = 0; x < width; x += gridSize) {
         ctx.beginPath();
-        for (let y = 0; y < height; y += 8) { // 8px segments to allow fluid bending
+        for (let y = 0; y < height; y += 12) {
           let drawX = x;
-          let alphaModifier = 1.0;
-          
+          let drawY = y;
+
           if (state.x > 0 && state.y > 0) {
             const dx = x - state.x;
             const dy = y - state.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance < maxDist) {
-              const force = (maxDist - distance) / maxDist;
-              // Mix speed-induced tearing and a gentle periodic sine wave ripple
-              const dynamicWarp = (state.speed * 0.4) + Math.sin(state.cycle - distance * 0.05) * 8;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < tearRadius) {
+              // Gravitational pull factor: intense close to the center, dropping off sharply
+              const falloff = Math.pow((tearRadius - dist) / tearRadius, 2.5);
               
-              drawX += (dx / distance) * force * dynamicWarp;
-              // Make lines flash and glow bright green right in the wave impact zone
-              alphaModifier += force * 5.5; 
+              // 1. Spatial Pinch: Pull universe coordinates tight along the tear vector
+              drawX -= state.vx * falloff * 8;
+              drawY -= state.vy * falloff * 8;
+
+              // 2. Gravitational Shockwave Refraction
+              // Creates a distinct "lens ring" distortion edge that looks like cracked atmospheric glass
+              const shockwaveRing = Math.sin(dist * 0.08 - state.tearIntensity * 0.05);
+              if (dist > 30) {
+                drawX += (dx / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
+                drawY += (dy / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
+              }
             }
           }
 
-          if (y === 0) ctx.moveTo(drawX, y);
-          else ctx.lineTo(drawX, y);
+          if (y === 0) ctx.moveTo(drawX, drawY);
+          else ctx.lineTo(drawX, drawY);
         }
-        
-        ctx.strokeStyle = `rgba(52, 211, 153, ${0.05 * ctx.globalAlpha})`; 
-        // We capture localized alpha enhancements using individual strokes for distorted groups
+
+        // Draw structural line coordinates
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.04)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      // Draw Horizontal Lines
+      // Horizontal Lines (Drawn second to form the full spatial intersection mesh)
       for (let y = 0; y < height; y += gridSize) {
         ctx.beginPath();
-        for (let x = 0; x < width; x += 8) {
+        for (let x = 0; x < width; x += 12) {
+          let drawX = x;
           let drawY = y;
-          
+
           if (state.x > 0 && state.y > 0) {
             const dx = x - state.x;
             const dy = y - state.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance < maxDist) {
-              const force = (maxDist - distance) / maxDist;
-              const dynamicWarp = (state.speed * 0.4) + Math.sin(state.cycle - distance * 0.05) * 8;
+            if (dist < tearRadius) {
+              const falloff = Math.pow((tearRadius - dist) / tearRadius, 2.5);
               
-              drawY += (dy / distance) * force * dynamicWarp;
+              drawX -= state.vx * falloff * 8;
+              drawY -= state.vy * falloff * 8;
+
+              const shockwaveRing = Math.sin(dist * 0.08 - state.tearIntensity * 0.05);
+              if (dist > 30) {
+                drawX += (dx / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
+                drawY += (dy / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
+              }
             }
           }
 
-          if (x === 0) ctx.moveTo(x, drawY);
-          else ctx.lineTo(x, drawY);
+          if (x === 0) ctx.moveTo(drawX, drawY);
+          else ctx.lineTo(drawX, drawY);
         }
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.05)';
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.04)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
 
-      // Render a localized highlighted geometric structure underneath the ripple epicenter
-      if (state.x > 0 && state.y > 0) {
-        // High-contrast, vibrant radial light splash that travels with the wave
-        const gradient = ctx.createRadialGradient(state.x, state.y, 5, state.x, state.y, maxDist);
-        gradient.addColorStop(0, 'rgba(52, 211, 153, 0.12)'); // bright emerald node
-        gradient.addColorStop(0.3, 'rgba(16, 185, 129, 0.04)');
-        gradient.addColorStop(0.7, 'rgba(6, 78, 59, 0.01)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      // Render the actual glowing "Space Tear Rift Line" along the velocity path
+      if (state.x > 0 && state.y > 0 && state.tearIntensity > 5) {
+        ctx.save();
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = 'rgba(16, 185, 129, 0.8)'; // Violent Emerald Core Discharge
         
-        ctx.fillStyle = gradient;
+        // Draw a sharp vector line representing the cut through the grid
         ctx.beginPath();
-        ctx.arc(state.x, state.y, maxDist, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Tactical coordinate scope rings that expand based on cursor speed
-        ctx.strokeStyle = `rgba(52, 211, 153, ${0.1 + (state.speed * 0.003)})`;
-        ctx.lineWidth = 0.75;
-        
-        ctx.beginPath();
-        // Dynamic expanding scanner rings mimicking soundwave transmissions
-        ctx.arc(state.x, state.y, 40 + (state.speed * 0.2), 0, Math.PI * 2);
+        ctx.moveTo(state.x, state.y);
+        ctx.lineTo(state.x - state.vx * 4, state.y - state.vy * 4);
+        ctx.strokeStyle = `rgba(209, 250, 229, ${Math.min(state.tearIntensity / 50, 0.9)})`;
+        ctx.lineWidth = Math.min(state.tearIntensity * 0.08, 4);
+        ctx.lineCap = 'round';
         ctx.stroke();
+        ctx.restore();
+
+        // Chromatic distortion overlay halo centered on the rip
+        const singularityGlow = ctx.createRadialGradient(state.x, state.y, 2, state.x, state.y, tearRadius * 0.6);
+        singularityGlow.addColorStop(0, 'rgba(6, 78, 59, 0.15)');
+        singularityGlow.addColorStop(0.2, 'rgba(16, 185, 129, 0.04)');
+        singularityGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.01)');
+        singularityGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = singularityGlow;
+        ctx.beginPath();
+        ctx.arc(state.x, state.y, tearRadius * 0.6, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       animationFrameId = requestAnimationFrame(render);
