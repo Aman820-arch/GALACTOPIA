@@ -1,7 +1,17 @@
 import React, { useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function UniqueLiquidBackground() {
   const canvasRef = useRef(null);
+  const location = useLocation();
+  
+  // Track location changes using a ref so the animation loop always reads the current page context instantly
+  const isContactRef = useRef(location.pathname === '/contact');
+
+  useEffect(() => {
+    isContactRef.current = location.pathname === '/contact';
+  }, [location.pathname]);
+
   const stateRef = useRef({ 
     x: -1000, y: -1000, 
     targetX: -1000, targetY: -1000,
@@ -61,6 +71,14 @@ export default function UniqueLiquidBackground() {
     const render = () => {
       ctx.clearRect(0, 0, width, height);
       const state = stateRef.current;
+      const isContact = isContactRef.current;
+
+      // Dynamic theme color selection
+      const gridColor = isContact ? 'rgba(245, 158, 11, 0.04)' : 'rgba(52, 211, 153, 0.04)';
+      const shadowColor = isContact ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)';
+      const coreStrokeColor = isContact 
+        ? `rgba(254, 243, 199, ${Math.min(state.tearIntensity / 50, 0.9)})`
+        : `rgba(209, 250, 229, ${Math.min(state.tearIntensity / 50, 0.9)})`;
 
       // Track cursor position with stiff, high-performance tracking
       state.x += (state.targetX - state.x) * 0.15;
@@ -108,7 +126,7 @@ export default function UniqueLiquidBackground() {
         }
 
         // Draw structural line coordinates
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.04)';
+        ctx.strokeStyle = gridColor;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -142,7 +160,7 @@ export default function UniqueLiquidBackground() {
           if (x === 0) ctx.moveTo(drawX, drawY);
           else ctx.lineTo(drawX, drawY);
         }
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.04)';
+        ctx.strokeStyle = gridColor;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -151,13 +169,13 @@ export default function UniqueLiquidBackground() {
       if (state.x > 0 && state.y > 0 && state.tearIntensity > 5) {
         ctx.save();
         ctx.shadowBlur = 25;
-        ctx.shadowColor = 'rgba(16, 185, 129, 0.8)'; // Violent Emerald Core Discharge
+        ctx.shadowColor = shadowColor; // Dynamic Emerald/Gold Core Discharge
         
         // Draw a sharp vector line representing the cut through the grid
         ctx.beginPath();
         ctx.moveTo(state.x, state.y);
         ctx.lineTo(state.x - state.vx * 4, state.y - state.vy * 4);
-        ctx.strokeStyle = `rgba(209, 250, 229, ${Math.min(state.tearIntensity / 50, 0.9)})`;
+        ctx.strokeStyle = coreStrokeColor;
         ctx.lineWidth = Math.min(state.tearIntensity * 0.08, 4);
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -165,9 +183,15 @@ export default function UniqueLiquidBackground() {
 
         // Chromatic distortion overlay halo centered on the rip
         const singularityGlow = ctx.createRadialGradient(state.x, state.y, 2, state.x, state.y, tearRadius * 0.6);
-        singularityGlow.addColorStop(0, 'rgba(6, 78, 59, 0.15)');
-        singularityGlow.addColorStop(0.2, 'rgba(16, 185, 129, 0.04)');
-        singularityGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.01)');
+        if (isContact) {
+          singularityGlow.addColorStop(0, 'rgba(120, 53, 4, 0.15)'); // Deep amber glow
+          singularityGlow.addColorStop(0.2, 'rgba(245, 158, 11, 0.04)');
+          singularityGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.01)');
+        } else {
+          singularityGlow.addColorStop(0, 'rgba(6, 78, 59, 0.15)'); // Original emerald green glow
+          singularityGlow.addColorStop(0.2, 'rgba(16, 185, 129, 0.04)');
+          singularityGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.01)');
+        }
         singularityGlow.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = singularityGlow;
         ctx.beginPath();

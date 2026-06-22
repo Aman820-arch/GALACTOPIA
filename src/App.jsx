@@ -152,10 +152,6 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
           </Routes>
 
-          <footer className="pt-6 border-t border-white/[0.03] text-[9px] text-zinc-600 tracking-wider flex justify-between uppercase font-medium">
-            <div>© Galactopia Hub</div>
-            <div>Powered by TMDB Engine</div>
-          </footer>
           
         </div>
       </div>
