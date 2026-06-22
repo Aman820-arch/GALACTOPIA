@@ -7,8 +7,8 @@ import UniqueLiquidBackground from './components/UniqueLiquidBackground';
 import Navbar from './components/Navbar';
 
 import Home from './pages/Home';
-import Sectors from './pages/Sectors';
-import Search from './pages/Search'; // <-- Injected new view sheet
+import Genres from './pages/Genres';
+import Search from './pages/Search';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -18,9 +18,9 @@ export default function App() {
   const [movies, setMovies] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
-  const [activeSectorLabel, setActiveSectorLabel] = useState("");
+  const [activeGenreLabel, setActiveGenreLabel] = useState("");
 
-  // Base Trigger: Mount trending records on baseline load
+  // Base Trigger: Mount trending records on baseline home load
   useEffect(() => {
     const fetchTrending = async () => {
       if (!TMDB_API_KEY) return;
@@ -47,10 +47,10 @@ export default function App() {
     fetchTrending();
   }, []);
 
-  // Live Mutation Core: Tracks characters keyed inside Search sheet
+  // Live Mutation Core: Tracks characters keyed inside the Search page
   useEffect(() => {
     if (!searchQuery.trim()) return;
-    setActiveSectorLabel(""); // Reset explicit sector text if typing custom letters
+    setActiveGenreLabel(""); // Reset explicit genre label if typing custom search criteria
     
     const delayDebounce = setTimeout(async () => {
       if (!TMDB_API_KEY) return;
@@ -81,17 +81,17 @@ export default function App() {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery]);
 
-  // Sector Matrix Hook: Pulls records filtered strictly by standard genre parameters
+  // Genre Filtering Hook: Pulls records filtered strictly by categorical genre IDs
   const fetchGenreSector = async (genreId, label) => {
     if (!TMDB_API_KEY) return;
     setIsLoadingFeeds(true);
-    setActiveSectorLabel(label);
-    setSearchQuery(""); // Wipe written search query words to isolate sector focus cleanly
+    setActiveGenreLabel(label);
+    setSearchQuery(""); // Wipe textual search state to cleanly isolate the selected category
     try {
       const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}`);
       const data = await res.json();
       if (data.results) {
-        const sectorMovies = data.results.map(m => ({
+        const genreMovies = data.results.map(m => ({
           id: m.id,
           title: m.title,
           tags: m.vote_average ? `★ ${m.vote_average.toFixed(1)}` : '0.0',
@@ -101,10 +101,10 @@ export default function App() {
           poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
           color: "from-purple-500/20 via-amber-600/5 to-transparent"
         }));
-        setMovies(sectorMovies);
+        setMovies(genreMovies);
       }
     } catch (err) {
-      console.error("Failed executing sector query override:", err);
+      console.error("Failed executing genre parameter query:", err);
     } finally {
       setIsLoadingFeeds(false);
     }
@@ -129,7 +129,7 @@ export default function App() {
           
           <Routes>
             <Route path="/" element={<Home movies={movies} setSelectedMovie={setSelectedMovie} />} />
-            <Route path="/sectors" element={<Sectors onSelectGenre={fetchGenreSector} />} />
+            <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
             <Route path="/search" element={
               <Search 
                 searchQuery={searchQuery}
@@ -137,7 +137,7 @@ export default function App() {
                 movies={movies}
                 setSelectedMovie={setSelectedMovie}
                 isLoadingFeeds={isLoadingFeeds}
-                activeSectorLabel={activeSectorLabel}
+                activeSectorLabel={activeGenreLabel}
               />
             } />
           </Routes>

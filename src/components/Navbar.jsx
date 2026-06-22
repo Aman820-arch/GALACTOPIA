@@ -7,7 +7,7 @@ export default function Navbar() {
   
   const navItems = [
     { icon: <Film size={18} />, label: 'HOME', path: '/' },
-    { icon: <Layers size={18} />, label: 'SECTORS', path: '/sectors' },
+    { icon: <Layers size={18} />, label: 'GENRES', path: '/genres' }, // Changed path and label
     { icon: <Search size={18} />, label: 'SEARCH', path: '/search' },
   ];
 

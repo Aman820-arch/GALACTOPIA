@@ -1,8 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
-// Official TMDB API genre mappings
-const SECTOR_GENRES = [
+const MOVIE_GENRES = [
   { label: "ACTION", id: 28 },
   { label: "SCI-FI", id: 878 },
   { label: "DRAMA", id: 18 },
@@ -11,30 +10,30 @@ const SECTOR_GENRES = [
   { label: "HORROR", id: 27 }
 ];
 
-export default function Sectors({ onSelectGenre }) {
+export default function Genres({ onSelectGenre }) {
   const navigate = useNavigate();
 
-  const handleSectorClick = (genre) => {
+  const handleGenreClick = (genre) => {
     onSelectGenre(genre.id, genre.label);
-    navigate('/search'); // Delivers the user straight into the layout results matrix
+    navigate('/search'); 
   };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
       <header className="space-y-2">
-        <h2 className="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">CONTENT SECTORS</h2>
+        <h2 className="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">MOVIE GENRES</h2>
         <p className="text-zinc-400 text-sm">Navigate the cinematic archives by categorization clusters.</p>
       </header>
 
       <section className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {SECTOR_GENRES.map((sector) => (
+        {MOVIE_GENRES.map((genre) => (
           <div 
-            key={sector.id} 
-            onClick={() => handleSectorClick(sector)}
+            key={genre.id} 
+            onClick={() => handleGenreClick(genre)}
             className="group border border-white/[0.05] bg-[#0c0c12]/40 p-6 rounded-2xl hover:border-amber-500/30 cursor-pointer transition-all duration-300"
           >
             <h4 className="text-sm font-bold text-zinc-300 group-hover:text-amber-500 transition-colors">
-              {sector.label}
+              {genre.label}
             </h4>
             <span className="text-[10px] text-zinc-600 block mt-1">BROWSE ARCHIVE →</span>
           </div>
