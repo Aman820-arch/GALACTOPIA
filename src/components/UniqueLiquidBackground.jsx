@@ -20,14 +20,13 @@ export default function UniqueLiquidBackground() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    // Create particle array
-    const particleCount = 75; // Kept light for high-performance rendering
+    // Keep particles light for high-performance rendering
+    const particleCount = 60; 
     const particles = [];
 
     class Particle {
       constructor() {
         this.reset();
-        // Randomize initial positions across the full viewport canvas
         this.x = Math.random() * width;
         this.y = Math.random() * height;
       }
@@ -35,11 +34,11 @@ export default function UniqueLiquidBackground() {
       reset() {
         this.x = Math.random() * width;
         this.y = Math.random() * height;
-        this.baseRadius = Math.random() * 1.5 + 0.5;
+        this.baseRadius = Math.random() * 1.2 + 0.4;
         this.radius = this.baseRadius;
-        this.vx = (Math.random() - 0.5) * 0.3; // Very slow natural drift
-        this.vy = (Math.random() - 0.5) * 0.3;
-        this.alpha = Math.random() * 0.3 + 0.1; // Faint, subtle ambient opacity
+        this.vx = (Math.random() - 0.5) * 0.2; 
+        this.vy = (Math.random() - 0.5) * 0.2;
+        this.alpha = Math.random() * 0.2 + 0.05; 
         this.currentAlpha = this.alpha;
       }
 
@@ -47,12 +46,10 @@ export default function UniqueLiquidBackground() {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Wrap around boundaries smoothly
         if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
           this.reset();
         }
 
-        // Gentle interactive mouse push field
         if (mouseX > 0 && mouseY > 0) {
           const dx = this.x - mouseX;
           const dy = this.y - mouseY;
@@ -61,14 +58,11 @@ export default function UniqueLiquidBackground() {
 
           if (dist < forceRadius) {
             const force = (forceRadius - dist) / forceRadius;
-            // Push particles out gently along the distance vector
             this.x += (dx / dist) * force * 1.2;
             this.y += (dy / dist) * force * 1.2;
-            // Temporarily illuminate particles near the cursor
-            this.currentAlpha = Math.min(this.alpha + force * 0.4, 0.7);
-            this.radius = this.baseRadius + force * 0.8;
+            this.currentAlpha = Math.min(this.alpha + force * 0.3, 0.6);
+            this.radius = this.baseRadius + force * 0.6;
           } else {
-            // Smoothly decay back to native ambient values
             this.currentAlpha += (this.alpha - this.currentAlpha) * 0.05;
             this.radius += (this.baseRadius - this.radius) * 0.05;
           }
@@ -78,15 +72,14 @@ export default function UniqueLiquidBackground() {
         }
       }
 
-      draw(colorRGB) {
+      draw() {
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${colorRGB}, ${this.currentAlpha})`;
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.currentAlpha})`;
         ctx.fill();
       }
     }
 
-    // Initialize particle field
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
     }
@@ -113,30 +106,45 @@ export default function UniqueLiquidBackground() {
     window.addEventListener('resize', handleResize);
 
     const render = () => {
-      // Create a solid deep background layer to prevent matrix grid remnants or bleeding
+      // 1. BASE SYSTEM LAYER (PITCH BLACK ABSOLUTE VOID)
       ctx.fillStyle = '#020204';
       ctx.fillRect(0, 0, width, height);
 
+      // 2. CINEMATIC VIGNETTE (CENTER STAGE GRADIENT)
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const maxRadius = Math.max(width, height) * 0.8;
+
+      const vignetteGradient = ctx.createRadialGradient(
+        centerX, centerY, 0, 
+        centerX, centerY, maxRadius
+      );
+      vignetteGradient.addColorStop(0, 'rgba(39, 39, 42, 0.22)'); // Soft zinc spotlight illumination
+      vignetteGradient.addColorStop(0.5, 'rgba(4, 4, 7, 0.6)');    // Deep mid-step transition
+      vignetteGradient.addColorStop(1, 'rgba(2, 2, 4, 0)');        // Fade smoothly into pure void
+      
+      ctx.fillStyle = vignetteGradient;
+      ctx.fillRect(0, 0, width, height);
+
       const isContact = isContactRef.current;
-      // Strict dynamic palette filtering: Amber/Gold for Contact, Premium Mint Green for default app
-      const colorRGB = isContact ? '245, 158, 11' : '16, 185, 129';
+      const glowColorRGB = isContact ? '245, 158, 11' : '16, 185, 129';
 
-      // Update and draw the particle array loop
-      particles.forEach((particle) => {
-        particle.update(mouse.x, mouse.y);
-        particle.draw(colorRGB);
-      });
-
-      // Ambient radial magnetic pointer bloom
+      // 3. DRAW CURSOR METADATA BLOOM
       if (mouse.x > 0 && mouse.y > 0) {
-        const pointerGlow = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 100);
-        pointerGlow.addColorStop(0, `rgba(${colorRGB}, 0.06)`);
+        const pointerGlow = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 120);
+        pointerGlow.addColorStop(0, `rgba(${glowColorRGB}, 0.05)`);
         pointerGlow.addColorStop(1, 'rgba(0,0,0,0)');
         ctx.fillStyle = pointerGlow;
         ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 100, 0, Math.PI * 2);
+        ctx.arc(mouse.x, mouse.y, 120, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      // 4. OVERLAY DRIFTING COSMIC PARTICLES
+      particles.forEach((particle) => {
+        particle.update(mouse.x, mouse.y);
+        particle.draw();
+      });
 
       animationFrameId = requestAnimationFrame(render);
     };

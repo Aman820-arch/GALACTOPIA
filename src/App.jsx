@@ -5,11 +5,14 @@ import Preloader from './components/Preloader';
 import MovieDetail from './components/MovieDetail';
 import UniqueLiquidBackground from './components/UniqueLiquidBackground';
 import Navbar from './components/Navbar';
+import NavAvatar from './components/NavAvatar'; // IMPORT NEW AVATAR NODE
 
 import Home from './pages/Home';
 import Genres from './pages/Genres';
 import Search from './pages/Search';
 import Contact from './pages/Contact';
+import Auth from './pages/Auth';               // IMPORT NEW AUTHENTICATION PAGE
+import Profile from './pages/Profile';         // IMPORT NEW PROFILE DASHBOARD
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -27,8 +30,14 @@ function AppContent({
       isContact ? 'selection:bg-amber-500/30 selection:text-amber-200' : 'selection:bg-emerald-500/30 selection:text-emerald-200'
     } pl-0 md:pl-20`}>
       
+      {/* Canvas Vignette Background Engine */}
       <UniqueLiquidBackground />
+      
+      {/* Left Side Navigation Sidebar */}
       <Navbar />
+
+      {/* Floating User Context Trigger Node (Top Right) */}
+      <NavAvatar />
 
       {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
       
@@ -53,6 +62,10 @@ function AppContent({
             />
           } />
           <Route path="/contact" element={<Contact />} />
+          
+          {/* REGISTERED SYSTEM ENTRY PORTS */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
         </Routes>
       </div>
     </div>
