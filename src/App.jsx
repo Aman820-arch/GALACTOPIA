@@ -13,177 +13,76 @@ import Search from './pages/Search';
 import Contact from './pages/Contact';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
+import Admin from './pages/Admin';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
-function AppContent({
-  showLoader, setShowLoader, searchQuery, setSearchQuery,
-  trendingMovies, searchResults, selectedMovie, setSelectedMovie,
-  isLoadingFeeds, activeGenreLabel, fetchGenreSector
-}) {
+function AppContent() {
   const location = useLocation();
   const isContact = location.pathname === '/contact';
   const isProfile = location.pathname === '/profile';
 
-  // INITIALIZE CORES FROM LOCAL STORAGE MEMORY POOLS
-  const [continueWatching, setContinueWatching] = useState(() => {
-    const saved = localStorage.getItem('continueWatching');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [watchlist, setWatchlist] = useState(() => {
-    const saved = localStorage.getItem('watchlist');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [wishlist, setWishlist] = useState(() => {
-    const saved = localStorage.getItem('wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [watchedHistory, setWatchedHistory] = useState(() => {
-    const saved = localStorage.getItem('watchedHistory');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  // BACKGROUND SYNC HOOK FOR CONTINUOUS ENGINE LOGGING
-  useEffect(() => {
-    localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-    localStorage.setItem('watchlist', JSON.stringify(watchlist));
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-    localStorage.setItem('watchedHistory', JSON.stringify(watchedHistory));
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [continueWatching, watchlist, wishlist, watchedHistory, favorites]);
-
-  const handlePlayMovie = (movie) => {
-    setSelectedMovie(movie);
-
-    setContinueWatching(prev => {
-      if (prev.find(m => m.id === movie.id)) return prev;
-      return [{
-        id: movie.id,
-        title: movie.title,
-        progress: 0,
-        year: movie.year,
-        tag: activeGenreLabel || "FEATURED"
-      }, ...prev];
-    });
-
-    setWatchedHistory(prev => {
-      if (prev.find(m => m.id === movie.id)) return prev;
-      return [{ id: movie.id, title: movie.title, watchedAt: "JUST NOW" }, ...prev];
-    });
-  };
-
-  const toggleWatchlist = (movie) => {
-    setWatchlist(prev => {
-      const exists = prev.find(m => m.id === movie.id);
-      if (exists) return prev.filter(m => m.id !== movie.id);
-      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
-    });
-  };
-
-  const handleAddWishlistRequest = (customOrder) => {
-    setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
-  };
-
-  const toggleFavorite = (movie) => {
-    setFavorites(prev => {
-      const exists = prev.find(m => m.id === movie.id);
-      if (exists) return prev.filter(m => m.id !== movie.id);
-      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
-    });
-  };
-
-  // Dynamic assignment of text selection highlights based on route paths
-  const getSelectionStyles = () => {
-    if (isContact) return 'selection:bg-amber-500/30 selection:text-amber-200';
-    if (isProfile) return 'selection:bg-cyan-500/30 selection:text-cyan-200';
-    return 'selection:bg-emerald-500/30 selection:text-emerald-200';
-  };
-
-  return (
-    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${getSelectionStyles()} pl-0 md:pl-20`}>
-
-      <UniqueLiquidBackground />
-      <Navbar />
-      <NavAvatar />
-
-      {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
-
-      {selectedMovie && (
-        <MovieDetail
-          movie={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
-          favorites={favorites}
-          watchlist={watchlist}
-          toggleFavorite={toggleFavorite}
-          toggleWatchlist={toggleWatchlist}
-        />
-      )}
-
-      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${!showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Home
-                movies={trendingMovies}
-                setSelectedMovie={handlePlayMovie}
-                wishlist={watchlist}
-                toggleWishlist={toggleWatchlist}
-                favorites={favorites}
-                toggleFavorite={toggleFavorite}
-              />
-            }
-          />
-          <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
-          <Route path="/search" element={
-            <Search
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              movies={searchResults}
-              setSelectedMovie={handlePlayMovie}
-              isLoadingFeeds={isLoadingFeeds}
-              activeSectorLabel={activeGenreLabel}
-              wishlist={watchlist}
-              toggleWishlist={toggleWatchlist}
-              favorites={favorites}
-              toggleFavorite={toggleFavorite}
-            />
-          } />
-          <Route path="/contact" element={<Contact onAddRequest={handleAddWishlistRequest} />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route
-            path="/profile"
-            element={
-              <Profile
-                continueWatching={continueWatching}
-                watchlist={watchlist}
-                wishlist={wishlist}
-                watchedHistory={watchedHistory}
-                favorites={favorites}
-              />
-            }
-          />
-        </Routes>
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
+  // GLOBAL STATE HUBS MOVED INSIDE APPCONTENT FOR PERFECT ROUTE SCOPING
   const [showLoader, setShowLoader] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
   const [activeGenreLabel, setActiveGenreLabel] = useState("");
 
+  // INITIALIZE CORES WITH BULLETPROOF ERROR-CATCHING SAFETY NETS
+  const [continueWatching, setContinueWatching] = useState(() => {
+    try {
+      const saved = localStorage.getItem('continueWatching');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Corrupt continueWatching storage wiped:", err);
+      return [];
+    }
+  });
+
+  const [watchlist, setWatchlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('watchlist');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Corrupt watchlist storage wiped:", err);
+      return [];
+    }
+  });
+
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wishlist');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Corrupt wishlist storage wiped:", err);
+      return [];
+    }
+  });
+
+  const [watchedHistory, setWatchedHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('watchedHistory');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Corrupt watchedHistory storage wiped:", err);
+      return [];
+    }
+  });
+
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem('favorites');
+      return saved && saved !== 'undefined' ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error("Corrupt favorites storage wiped:", err);
+      return [];
+    }
+  });
+
+  // DATA SYNC HOOKS FOR LIVE MOVIE DISCOVERY DATA STREAMS
   useEffect(() => {
     const fetchTrending = async () => {
       if (!TMDB_API_KEY) return;
@@ -275,21 +174,152 @@ export default function App() {
     }
   };
 
+  // BACKGROUND SYNC HOOK FOR CONTINUOUS ENGINE LOGGING
+  useEffect(() => {
+    try {
+      localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+      localStorage.setItem('watchlist', JSON.stringify(watchlist));
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+      localStorage.setItem('watchedHistory', JSON.stringify(watchedHistory));
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+    } catch (err) {
+      console.error("Failed saving application state changes to local storage:", err);
+    }
+  }, [continueWatching, watchlist, wishlist, watchedHistory, favorites]);
+
+  const handlePlayMovie = (movie) => {
+    setSelectedMovie(movie);
+
+    setContinueWatching(prev => {
+      if (prev.find(m => m.id === movie.id)) return prev;
+      return [{
+        id: movie.id,
+        title: movie.title,
+        poster: movie.poster,
+        progress: 0,
+        year: movie.year,
+        tag: activeGenreLabel || "FEATURED"
+      }, ...prev];
+    });
+
+    setWatchedHistory(prev => {
+      if (prev.find(m => m.id === movie.id)) return prev;
+      return [{ id: movie.id, title: movie.title, watchedAt: "JUST NOW" }, ...prev];
+    });
+  };
+
+  const toggleWatchlist = (movie) => {
+    setWatchlist(prev => {
+      const exists = prev.find(m => m.id === movie.id);
+      if (exists) return prev.filter(m => m.id !== movie.id);
+      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
+    });
+  };
+
+  const handleAddWishlistRequest = (customOrder) => {
+    setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
+  };
+
+  const toggleFavorite = (movie) => {
+    setFavorites(prev => {
+      const exists = prev.find(m => m.id === movie.id);
+      if (exists) return prev.filter(m => m.id !== movie.id);
+      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
+    });
+  };
+
+  // Dynamic assignment of text selection highlights based on route paths
+  const getSelectionStyles = () => {
+    if (isContact) return 'selection:bg-amber-500/30 selection:text-amber-200';
+    if (isProfile) return 'selection:bg-zinc-500/30 selection:text-zinc-200';
+    return 'selection:bg-emerald-500/30 selection:text-emerald-200';
+  };
+
+  return (
+    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${getSelectionStyles()} pl-0 md:pl-20`}>
+
+      <UniqueLiquidBackground />
+      <Navbar />
+      <NavAvatar />
+
+      {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
+
+      {selectedMovie && (
+        <MovieDetail
+          movie={selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+          favorites={favorites}
+          watchlist={watchlist}
+          toggleFavorite={toggleFavorite}
+          toggleWatchlist={toggleWatchlist}
+        />
+      )}
+
+      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${!showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <Home
+                movies={trendingMovies}
+                setSelectedMovie={handlePlayMovie}
+                wishlist={watchlist}
+                toggleWishlist={toggleWatchlist}
+                favorites={favorites}
+                toggleFavorite={toggleFavorite}
+              />
+            }
+          />
+          <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
+          <Route path="/search" element={
+            <Search
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              movies={searchResults}
+              setSelectedMovie={handlePlayMovie}
+              isLoadingFeeds={isLoadingFeeds}
+              activeSectorLabel={activeGenreLabel}
+              wishlist={watchlist}
+              toggleWishlist={toggleWatchlist}
+              favorites={favorites}
+              toggleFavorite={toggleFavorite}
+            />
+          } />
+          <Route path="/contact" element={<Contact onAddRequest={handleAddWishlistRequest} />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route
+            path="/profile"
+            element={
+              <Profile
+                continueWatching={continueWatching}
+                watchlist={watchlist}
+                wishlist={wishlist}
+                watchedHistory={watchedHistory}
+                favorites={favorites}
+              />
+            }
+          />
+          <Route 
+            path="/admin" 
+            element={
+              <Admin 
+                wishlist={wishlist} 
+                setWishlist={setWishlist} 
+                setTrendingMovies={setTrendingMovies} 
+                setSearchResults={setSearchResults} 
+              />
+            } 
+          />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <Router>
-      <AppContent
-        showLoader={showLoader}
-        setShowLoader={setShowLoader}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        trendingMovies={trendingMovies}
-        searchResults={searchResults}
-        selectedMovie={selectedMovie}
-        setSelectedMovie={setSelectedMovie}
-        isLoadingFeeds={isLoadingFeeds}
-        activeGenreLabel={activeGenreLabel}
-        fetchGenreSector={fetchGenreSector}
-      />
+      <AppContent />
     </Router>
   );
 }
