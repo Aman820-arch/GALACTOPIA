@@ -23,13 +23,38 @@ function AppContent({
 }) {
   const location = useLocation();
   const isContact = location.pathname === '/contact';
+  const isProfile = location.pathname === '/profile';
 
-  // CLEAN SLATE CORE DYNAMIC AGGREGATORS
-  const [continueWatching, setContinueWatching] = useState([]);
-  const [watchlist, setWatchlist] = useState([]); // <-- Catalog Save For Later
-  const [wishlist, setWishlist] = useState([]);   // <-- Contact Form Requests
-  const [watchedHistory, setWatchedHistory] = useState([]);
-  const [favorites, setFavorites] = useState([]);
+  // INITIALIZE CORES FROM LOCAL STORAGE MEMORY POOLS
+  const [continueWatching, setContinueWatching] = useState(() => {
+    const saved = localStorage.getItem('continueWatching');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [watchlist, setWatchlist] = useState(() => {
+    const saved = localStorage.getItem('watchlist');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [wishlist, setWishlist] = useState(() => {
+    const saved = localStorage.getItem('wishlist');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [watchedHistory, setWatchedHistory] = useState(() => {
+    const saved = localStorage.getItem('watchedHistory');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  // BACKGROUND SYNC HOOK FOR CONTINUOUS ENGINE LOGGING
+  useEffect(() => {
+    localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
+    localStorage.setItem('watchlist', JSON.stringify(watchlist));
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('watchedHistory', JSON.stringify(watchedHistory));
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [continueWatching, watchlist, wishlist, watchedHistory, favorites]);
 
   const handlePlayMovie = (movie) => {
     setSelectedMovie(movie);
@@ -51,7 +76,6 @@ function AppContent({
     });
   };
 
-  // Toggles items in the catalog-driven Watchlist
   const toggleWatchlist = (movie) => {
     setWatchlist(prev => {
       const exists = prev.find(m => m.id === movie.id);
@@ -60,7 +84,6 @@ function AppContent({
     });
   };
 
-  // Handles custom request forms appended from the Contact desk
   const handleAddWishlistRequest = (customOrder) => {
     setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
   };
@@ -73,9 +96,15 @@ function AppContent({
     });
   };
 
+  // Dynamic assignment of text selection highlights based on route paths
+  const getSelectionStyles = () => {
+    if (isContact) return 'selection:bg-amber-500/30 selection:text-amber-200';
+    if (isProfile) return 'selection:bg-cyan-500/30 selection:text-cyan-200';
+    return 'selection:bg-emerald-500/30 selection:text-emerald-200';
+  };
+
   return (
-    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${isContact ? 'selection:bg-amber-500/30 selection:text-amber-200' : 'selection:bg-emerald-500/30 selection:text-emerald-200'
-      } pl-0 md:pl-20`}>
+    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${getSelectionStyles()} pl-0 md:pl-20`}>
 
       <UniqueLiquidBackground />
       <Navbar />
@@ -94,8 +123,7 @@ function AppContent({
         />
       )}
 
-      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${!showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}>
+      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${!showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <Routes>
           <Route
             path="/"
@@ -103,7 +131,7 @@ function AppContent({
               <Home
                 movies={trendingMovies}
                 setSelectedMovie={handlePlayMovie}
-                wishlist={watchlist} // Using watchlist for internal bookmarks
+                wishlist={watchlist}
                 toggleWishlist={toggleWatchlist}
                 favorites={favorites}
                 toggleFavorite={toggleFavorite}
@@ -119,7 +147,7 @@ function AppContent({
               setSelectedMovie={handlePlayMovie}
               isLoadingFeeds={isLoadingFeeds}
               activeSectorLabel={activeGenreLabel}
-              wishlist={watchlist} // Using watchlist for internal bookmarks
+              wishlist={watchlist}
               toggleWishlist={toggleWatchlist}
               favorites={favorites}
               toggleFavorite={toggleFavorite}
