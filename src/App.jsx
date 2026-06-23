@@ -5,18 +5,17 @@ import Preloader from './components/Preloader';
 import MovieDetail from './components/MovieDetail';
 import UniqueLiquidBackground from './components/UniqueLiquidBackground';
 import Navbar from './components/Navbar';
-import NavAvatar from './components/NavAvatar'; 
+import NavAvatar from './components/NavAvatar';
 
 import Home from './pages/Home';
 import Genres from './pages/Genres';
 import Search from './pages/Search';
 import Contact from './pages/Contact';
-import Auth from './pages/Auth';               
-import Profile from './pages/Profile';         
+import Auth from './pages/Auth';
+import Profile from './pages/Profile';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
-// Wrapper component to safely access hook variables within context router scopes
 function AppContent({
   showLoader, setShowLoader, searchQuery, setSearchQuery,
   trendingMovies, searchResults, selectedMovie, setSelectedMovie,
@@ -27,43 +26,45 @@ function AppContent({
 
   // CLEAN SLATE CORE DYNAMIC AGGREGATORS
   const [continueWatching, setContinueWatching] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
+  const [watchlist, setWatchlist] = useState([]); // <-- Catalog Save For Later
+  const [wishlist, setWishlist] = useState([]);   // <-- Contact Form Requests
   const [watchedHistory, setWatchedHistory] = useState([]);
   const [favorites, setFavorites] = useState([]);
 
-  // Live wrapper to push clicks into runtime pools
   const handlePlayMovie = (movie) => {
     setSelectedMovie(movie);
-    
-    // Add to continue watching pool at 0% default progress
+
     setContinueWatching(prev => {
       if (prev.find(m => m.id === movie.id)) return prev;
-      return [{ 
-        id: movie.id, 
-        title: movie.title, 
-        progress: 0, 
-        year: movie.year, 
-        tag: activeGenreLabel || "FEATURED" 
+      return [{
+        id: movie.id,
+        title: movie.title,
+        progress: 0,
+        year: movie.year,
+        tag: activeGenreLabel || "FEATURED"
       }, ...prev];
     });
 
-    // Append to watched history tracking stack
     setWatchedHistory(prev => {
       if (prev.find(m => m.id === movie.id)) return prev;
       return [{ id: movie.id, title: movie.title, watchedAt: "JUST NOW" }, ...prev];
     });
   };
 
-  // Reusable prop handler passed to dashboard toggles or feed nodes
-  const toggleWishlist = (movie) => {
-    setWishlist(prev => {
+  // Toggles items in the catalog-driven Watchlist
+  const toggleWatchlist = (movie) => {
+    setWatchlist(prev => {
       const exists = prev.find(m => m.id === movie.id);
       if (exists) return prev.filter(m => m.id !== movie.id);
       return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
     });
   };
 
-  // Dedicated handler to capture runtime core selections for favorites
+  // Handles custom request forms appended from the Contact desk
+  const handleAddWishlistRequest = (customOrder) => {
+    setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
+  };
+
   const toggleFavorite = (movie) => {
     setFavorites(prev => {
       const exists = prev.find(m => m.id === movie.id);
@@ -73,64 +74,70 @@ function AppContent({
   };
 
   return (
-    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${
-      isContact ? 'selection:bg-amber-500/30 selection:text-amber-200' : 'selection:bg-emerald-500/30 selection:text-emerald-200'
-    } pl-0 md:pl-20`}>
-      
+    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${isContact ? 'selection:bg-amber-500/30 selection:text-amber-200' : 'selection:bg-emerald-500/30 selection:text-emerald-200'
+      } pl-0 md:pl-20`}>
+
       <UniqueLiquidBackground />
       <Navbar />
       <NavAvatar />
 
       {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
-      
+
       {selectedMovie && (
-        <MovieDetail movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
+        <MovieDetail
+          movie={selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+          favorites={favorites}
+          watchlist={watchlist}
+          toggleFavorite={toggleFavorite}
+          toggleWatchlist={toggleWatchlist}
+        />
       )}
 
-      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${
-        !showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-      }`}>
+      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${!showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+        }`}>
         <Routes>
-          <Route 
-            path="/" 
+          <Route
+            path="/"
             element={
-              <Home 
-                movies={trendingMovies} 
-                setSelectedMovie={handlePlayMovie} 
-                wishlist={wishlist}
-                toggleWishlist={toggleWishlist}
+              <Home
+                movies={trendingMovies}
+                setSelectedMovie={handlePlayMovie}
+                wishlist={watchlist} // Using watchlist for internal bookmarks
+                toggleWishlist={toggleWatchlist}
                 favorites={favorites}
                 toggleFavorite={toggleFavorite}
               />
-            } 
+            }
           />
           <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
           <Route path="/search" element={
-            <Search 
+            <Search
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
               movies={searchResults}
               setSelectedMovie={handlePlayMovie}
               isLoadingFeeds={isLoadingFeeds}
               activeSectorLabel={activeGenreLabel}
-              wishlist={wishlist}
-              toggleWishlist={toggleWishlist}
+              wishlist={watchlist} // Using watchlist for internal bookmarks
+              toggleWishlist={toggleWatchlist}
               favorites={favorites}
               toggleFavorite={toggleFavorite}
             />
           } />
-          <Route path="/contact" element={<Contact onAddRequest={toggleWishlist} />} />
+          <Route path="/contact" element={<Contact onAddRequest={handleAddWishlistRequest} />} />
           <Route path="/auth" element={<Auth />} />
-          <Route 
-            path="/profile" 
+          <Route
+            path="/profile"
             element={
-              <Profile 
+              <Profile
                 continueWatching={continueWatching}
+                watchlist={watchlist}
                 wishlist={wishlist}
                 watchedHistory={watchedHistory}
                 favorites={favorites}
               />
-            } 
+            }
           />
         </Routes>
       </div>
@@ -141,10 +148,10 @@ function AppContent({
 export default function App() {
   const [showLoader, setShowLoader] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
-  
+
   const [selectedMovie, setSelectedMovie] = useState(null);
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
   const [activeGenreLabel, setActiveGenreLabel] = useState("");
@@ -181,8 +188,8 @@ export default function App() {
       if (trendingMovies.length > 0) setSearchResults(trendingMovies);
       return;
     }
-    setActiveGenreLabel(""); 
-    
+    setActiveGenreLabel("");
+
     const delayDebounce = setTimeout(async () => {
       if (!TMDB_API_KEY) return;
       setIsLoadingFeeds(true);
@@ -216,7 +223,7 @@ export default function App() {
     if (!TMDB_API_KEY) return;
     setIsLoadingFeeds(true);
     setActiveGenreLabel(label);
-    setSearchQuery(""); 
+    setSearchQuery("");
     try {
       const res = await fetch(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}`);
       const data = await res.json();
@@ -242,7 +249,7 @@ export default function App() {
 
   return (
     <Router>
-      <AppContent 
+      <AppContent
         showLoader={showLoader}
         setShowLoader={setShowLoader}
         searchQuery={searchQuery}

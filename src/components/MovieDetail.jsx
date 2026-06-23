@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
+import { Heart, Bookmark, Play, Square } from 'lucide-react';
 
-export default function MovieDetail({ movie, onClose }) {
+export default function MovieDetail({ 
+  movie, 
+  onClose, 
+  favorites = [], 
+  watchlist = [], // <-- Cleaned up prop identity
+  toggleFavorite, 
+  toggleWatchlist // <-- Cleaned up callback identity
+}) {
   const [visible, setVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -15,11 +23,13 @@ export default function MovieDetail({ movie, onClose }) {
 
   if (!movie) return null;
 
+  const isFav = favorites.some(f => f.id === movie.id);
+  const isWatch = watchlist.some(w => w.id === movie.id); // <-- Watchlist array validation Check
+
   const posterUrl = movie.poster 
     ? (movie.poster.startsWith('http') ? movie.poster : `https://image.tmdb.org/t/p/w500${movie.poster}`)
     : null;
 
-  // Swapped to vidsrc.me which uses standard DNS structures to slip past ISP blocks
   const streamUrl = `https://vidsrc.me/embed/movie/${movie.id}`;
 
   return (
@@ -27,16 +37,13 @@ export default function MovieDetail({ movie, onClose }) {
       visible ? 'opacity-100' : 'opacity-0 pointer-events-none'
     }`}>
       
-      {/* Background Ambient Glow */}
       <div className="absolute inset-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
         <div className={`absolute inset-0 bg-gradient-to-tr ${movie.color || 'from-zinc-900 to-black'} mix-blend-color-dodge animate-pulse`} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#050507] via-transparent to-[#050507]" />
       </div>
 
-      {/* Main Dual-Column Platform Container */}
       <div className="relative z-10 w-full max-w-5xl h-full max-h-[850px] bg-[#0b0b0f]/95 border border-white/[0.04] rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_0_60px_rgba(0,0,0,0.8)]">
         
-        {/* LEFT COLUMN: Clean Poster Display OR Active Streaming Viewport */}
         <div className="w-full md:w-3/5 h-[350px] md:h-full bg-black relative flex items-center justify-center border-b md:border-b-0 md:border-r border-white/[0.04] overflow-hidden">
           {isPlaying ? (
             <iframe
@@ -58,7 +65,6 @@ export default function MovieDetail({ movie, onClose }) {
                 alt={movie.title} 
                 className="w-full h-full object-cover relative z-10 animate-in fade-in zoom-in-95 duration-500"
               />
-              {/* Central Play Button Trigger Overlay */}
               <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 opacity-100 transition-opacity">
                 <button 
                   onClick={() => setIsPlaying(true)}
@@ -73,10 +79,8 @@ export default function MovieDetail({ movie, onClose }) {
           )}
         </div>
 
-        {/* RIGHT COLUMN: Interactive Control & Metadata Desk */}
         <div className="w-full md:w-2/5 p-6 md:p-8 flex flex-col justify-between overflow-y-auto h-[calc(100%-350px)] md:h-full space-y-6">
           
-          {/* Top Control Header */}
           <div className="flex justify-between items-center text-xs text-zinc-500 border-b border-white/[0.04] pb-4 font-mono">
             <div>Movie ID: {movie.id}</div>
             <button 
@@ -87,7 +91,6 @@ export default function MovieDetail({ movie, onClose }) {
             </button>
           </div>
 
-          {/* Core Descriptive Text & Metadata */}
           <div className="my-auto space-y-5">
             <div className="space-y-2">
               <div className="text-[#00ffcc] text-xs font-bold tracking-wider uppercase font-mono">
@@ -103,7 +106,6 @@ export default function MovieDetail({ movie, onClose }) {
               </div>
             </div>
 
-            {/* Direct Story Summary Module */}
             <div className="p-4 rounded-lg bg-white/[0.01] border border-white/[0.03] space-y-1.5">
               <div className="text-[10px] text-zinc-500 font-bold tracking-wider font-mono">STORYLINE</div>
               <p className="leading-relaxed text-zinc-300 text-xs">
@@ -111,21 +113,47 @@ export default function MovieDetail({ movie, onClose }) {
               </p>
             </div>
 
-            {/* Direct Operational Streaming Buttons */}
             <div className="pt-2 flex flex-col gap-2">
               <button 
                 onClick={() => setIsPlaying(!isPlaying)}
-                className="w-full bg-white text-black font-bold text-xs tracking-widest py-3.5 rounded hover:bg-[#00ffcc] transition-all shadow-lg cursor-pointer uppercase font-mono"
+                className={`w-full font-bold text-xs tracking-widest py-3.5 rounded transition-all shadow-lg cursor-pointer uppercase font-mono flex items-center justify-center gap-2 ${
+                  isPlaying 
+                    ? 'bg-zinc-800 text-white hover:bg-zinc-700' 
+                    : 'bg-white text-black hover:bg-[#00ffcc]'
+                }`}
               >
-                {isPlaying ? "⏹ Stop Stream" : "⚡ Start Streaming Now"}
+                {isPlaying ? <Square size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+                {isPlaying ? "Stop Stream" : "Start Streaming Now"}
               </button>
-              <button className="w-full border border-white/[0.08] bg-white/[0.02] text-zinc-300 font-bold text-xs tracking-widest py-3.5 rounded hover:bg-white/[0.06] hover:text-white transition-all cursor-pointer uppercase font-mono">
-                + Add to Watchlist
-              </button>
+
+              <div className="grid grid-cols-2 gap-2">
+                <button 
+                  onClick={() => toggleWatchlist(movie)}
+                  className={`border font-bold text-[10px] tracking-widest py-3 rounded transition-all cursor-pointer uppercase font-mono flex items-center justify-center gap-2 ${
+                    isWatch 
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' 
+                      : 'border-white/[0.08] bg-white/[0.02] text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                  }`}
+                >
+                  <Bookmark size={11} fill={isWatch ? "currentColor" : "none"} />
+                  {isWatch ? "In Watchlist" : "Watchlist"}
+                </button>
+
+                <button 
+                  onClick={() => toggleFavorite(movie)}
+                  className={`border font-bold text-[10px] tracking-widest py-3 rounded transition-all cursor-pointer uppercase font-mono flex items-center justify-center gap-2 ${
+                    isFav 
+                      ? 'border-red-500/30 bg-red-500/10 text-red-400' 
+                      : 'border-white/[0.08] bg-white/[0.02] text-zinc-300 hover:bg-white/[0.06] hover:text-white'
+                  }`}
+                >
+                  <Heart size={11} fill={isFav ? "currentColor" : "none"} />
+                  {isFav ? "Favorited" : "Favorite"}
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Secure Streaming Link Gateway Routing */}
           <div className="space-y-2 pt-4 border-t border-white/[0.04]">
             <div className="text-[10px] font-bold text-zinc-500 tracking-wider font-mono uppercase">Streaming Server</div>
             <div className="p-3 border border-[#00ffcc]/30 bg-[#00ffcc]/5 rounded flex justify-between items-center text-xs">

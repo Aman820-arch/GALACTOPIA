@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react'; // Added for empty state aesthetic
+import { Heart, Bookmark, ClipboardList } from 'lucide-react';
 
-export default function Profile({ continueWatching, wishlist, watchedHistory, favorites = [] }) {
+export default function Profile({ continueWatching, watchlist = [], wishlist = [], watchedHistory, favorites = [] }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('continue');
   
@@ -35,7 +35,7 @@ export default function Profile({ continueWatching, wishlist, watchedHistory, fa
 
         {/* METRICS HUB TAB NAVIGATION */}
         <div className="flex border-b border-white/[0.03] font-mono text-[10px] tracking-widest gap-8 overflow-x-auto pb-1">
-          {['continue', 'favorites', 'wishlist', 'history'].map((tab) => (
+          {['continue', 'favorites', 'watchlist', 'wishlist', 'history'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -45,7 +45,8 @@ export default function Profile({ continueWatching, wishlist, watchedHistory, fa
             >
               {tab === 'continue' && `Continue Watching (${continueWatching.length})`}
               {tab === 'favorites' && `Favorites (${favorites.length})`}
-              {tab === 'wishlist' && `Wishlist (${wishlist.length})`}
+              {tab === 'watchlist' && `Watchlist (${watchlist.length})`}
+              {tab === 'wishlist' && `Wishlist Requests (${wishlist.length})`}
               {tab === 'history' && `History Log (${watchedHistory.length})`}
               
               {activeTab === tab && (
@@ -106,20 +107,42 @@ export default function Profile({ continueWatching, wishlist, watchedHistory, fa
             </div>
           )}
 
-          {activeTab === 'wishlist' && (
+          {activeTab === 'watchlist' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {wishlist.length === 0 ? (
-                <div className="col-span-full border border-dashed border-white/[0.05] rounded-xl p-8 text-center bg-white/[0.005]">
-                  <p className="text-zinc-600 font-mono text-[10px] tracking-wider uppercase">YOUR INDEX WISHLIST IS PRISTINE</p>
+              {watchlist.length === 0 ? (
+                <div className="col-span-full border border-dashed border-white/[0.05] rounded-xl p-8 text-center bg-white/[0.005] flex flex-col items-center justify-center space-y-2">
+                  <Bookmark size={16} className="text-zinc-700" />
+                  <p className="text-zinc-600 font-mono text-[10px] tracking-wider uppercase">YOUR CATALOG WATCHLIST IS EMPTY</p>
                 </div>
               ) : (
-                wishlist.map((movie) => (
+                watchlist.map((movie) => (
                   <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-5 rounded-xl hover:border-emerald-500/20 transition-all duration-300 flex items-center justify-between shadow-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors uppercase tracking-wider">{movie.title}</h4>
-                      <p className="text-[10px] font-mono text-zinc-500">{movie.tag} {movie.year ? `• ${movie.year}` : ''}</p>
+                      <p className="text-[10px] font-mono text-emerald-400">{movie.tag || movie.tags} {movie.year ? `• ${movie.year}` : ''}</p>
                     </div>
-                    <span className="text-zinc-600 group-hover:text-emerald-400 font-mono text-xs transition-colors cursor-pointer select-none">→</span>
+                    <span className="text-emerald-400/60 group-hover:text-emerald-400 font-mono text-xs transition-colors cursor-pointer select-none">✓</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {activeTab === 'wishlist' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {wishlist.length === 0 ? (
+                <div className="col-span-full border border-dashed border-white/[0.05] rounded-xl p-8 text-center bg-white/[0.005] flex flex-col items-center justify-center space-y-2">
+                  <ClipboardList size={16} className="text-zinc-700" />
+                  <p className="text-zinc-600 font-mono text-[10px] tracking-wider uppercase">YOUR SUBMITTED REQUEST MATRIX IS PRISTINE</p>
+                </div>
+              ) : (
+                wishlist.map((movie) => (
+                  <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-5 rounded-xl hover:border-amber-500/20 transition-all duration-300 flex items-center justify-between shadow-xl">
+                    <div className="space-y-1">
+                      <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors uppercase tracking-wider">{movie.title}</h4>
+                      <p className="text-[10px] font-mono text-zinc-500">{movie.tag || "CUSTOM REQUEST"} {movie.year ? `• ${movie.year}` : ''}</p>
+                    </div>
+                    <span className="text-amber-400 font-mono text-[9px] uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-md">PENDING</span>
                   </div>
                 ))
               )}
