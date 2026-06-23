@@ -6,16 +6,16 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
     <div className="space-y-8 animate-in fade-in duration-500 flex flex-col min-h-[80vh] justify-between">
       <div className="space-y-8 w-full">
         <header className="space-y-2">
-          <h2 className="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">
+          <h2 className="text-xs font-black tracking-[0.3em] text-emerald-500 uppercase">
             {activeSectorLabel ? `GENRE: ${activeSectorLabel}` : 'GLOBAL SEARCH'}
           </h2>
           <p className="text-zinc-400 text-sm">Query the TMDB database for specific cinematic records.</p>
         </header>
 
         <div className="w-full max-w-xl relative group">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500/10 to-purple-500/10 rounded-xl blur opacity-30 group-focus-within:opacity-100 transition duration-300" />
-          <div className="relative flex items-center bg-[#09090d]/90 border border-white/[0.05] rounded-xl px-4 py-3.5 group-focus-within:border-amber-500/30 transition-colors">
-            <span className="text-zinc-500 font-mono text-sm mr-3 text-amber-500">&gt;</span>
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/10 to-purple-500/10 rounded-xl blur opacity-30 group-focus-within:opacity-100 transition duration-300" />
+          <div className="relative flex items-center bg-[#09090d]/90 border border-white/[0.05] rounded-xl px-4 py-3.5 group-focus-within:border-emerald-500/30 transition-colors">
+            <span className="text-zinc-500 font-mono text-sm mr-3 text-emerald-500">&gt;</span>
             <input 
               type="text"
               placeholder="Search titles, actors, genres..."
@@ -25,7 +25,7 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
               autoFocus
             />
             {isLoadingFeeds && (
-              <span className="text-[10px] tracking-widest text-amber-500 animate-pulse font-mono font-bold">
+              <span className="text-[10px] tracking-widest text-emerald-500 animate-pulse font-mono font-bold">
                 LOADING
               </span>
             )}
@@ -37,7 +37,7 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
             <div 
               key={`${movie.id}-${idx}`} 
               onClick={() => setSelectedMovie(movie)}
-              className="group rounded-xl border border-white/[0.04] bg-[#0c0c12]/40 p-3 flex flex-col gap-3 hover:border-amber-500/30 transition-all duration-300 cursor-pointer"
+              className="group rounded-xl border border-white/[0.04] bg-[#0c0c12] p-3 flex flex-col gap-3 hover:border-emerald-500/30 transition-all duration-300 cursor-pointer"
             >
               <div className="aspect-[16/10] w-full rounded-lg bg-zinc-900 overflow-hidden relative">
                 {movie.poster ? (
@@ -56,7 +56,7 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
                 </h4>
                 <div className="flex justify-between items-center text-[10px] text-zinc-500">
                   <span>{movie.year}</span>
-                  <span className="text-amber-400 font-semibold">{movie.tags}</span>
+                  <span className="text-emerald-400 font-semibold">{movie.tags}</span>
                 </div>
               </div>
             </div>
@@ -73,13 +73,13 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
       <footer className="mt-20 pt-8 border-t border-white/[0.03] space-y-6 w-full">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-6 font-mono text-[9px] tracking-[0.2em] text-zinc-500">
-            <Link to="/" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               HOME
             </Link>
-            <Link to="/genres" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/genres" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               GENRES
             </Link>
-            <Link to="/search" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/search" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               SEARCH
             </Link>
           </div>

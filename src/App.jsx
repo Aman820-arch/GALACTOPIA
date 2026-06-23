@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 
 import Preloader from './components/Preloader';
 import MovieDetail from './components/MovieDetail';
@@ -13,11 +13,56 @@ import Contact from './pages/Contact';
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
+// Wrapper component to safely access hook variables within context router scopes
+function AppContent({
+  showLoader, setShowLoader, searchQuery, setSearchQuery,
+  trendingMovies, searchResults, selectedMovie, setSelectedMovie,
+  isLoadingFeeds, activeGenreLabel, fetchGenreSector
+}) {
+  const location = useLocation();
+  const isContact = location.pathname === '/contact';
+
+  return (
+    <div className={`min-h-screen bg-[#020204] text-white relative overflow-x-hidden ${
+      isContact ? 'selection:bg-amber-500/30 selection:text-amber-200' : 'selection:bg-emerald-500/30 selection:text-emerald-200'
+    } pl-0 md:pl-20`}>
+      
+      <UniqueLiquidBackground />
+      <Navbar />
+
+      {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
+      
+      {selectedMovie && (
+        <MovieDetail movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
+      )}
+
+      <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${
+        !showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
+      }`}>
+        <Routes>
+          <Route path="/" element={<Home movies={trendingMovies} setSelectedMovie={setSelectedMovie} />} />
+          <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
+          <Route path="/search" element={
+            <Search 
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              movies={searchResults}
+              setSelectedMovie={setSelectedMovie}
+              isLoadingFeeds={isLoadingFeeds}
+              activeSectorLabel={activeGenreLabel}
+            />
+          } />
+          <Route path="/contact" element={<Contact />} />
+        </Routes>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [showLoader, setShowLoader] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Independent layout data pools
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   
@@ -25,7 +70,6 @@ export default function App() {
   const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
   const [activeGenreLabel, setActiveGenreLabel] = useState("");
 
-  // Permanently lock trending records for the Home screen marquee
   useEffect(() => {
     const fetchTrending = async () => {
       if (!TMDB_API_KEY) return;
@@ -41,10 +85,10 @@ export default function App() {
             rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
             overview: m.overview,
             poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
-            color: "from-amber-500/20 via-purple-600/5 to-transparent"
+            color: "from-emerald-500/20 via-purple-600/5 to-transparent"
           }));
           setTrendingMovies(formatted);
-          setSearchResults(formatted); // Initial state population for search
+          setSearchResults(formatted);
         }
       } catch (err) {
         console.error("Failed connecting to TMDB matrix:", err);
@@ -53,7 +97,6 @@ export default function App() {
     fetchTrending();
   }, []);
 
-  // Live Search Input Streams
   useEffect(() => {
     if (!searchQuery.trim()) {
       if (trendingMovies.length > 0) setSearchResults(trendingMovies);
@@ -76,7 +119,7 @@ export default function App() {
             rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
             overview: m.overview,
             poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
-            color: "from-red-500/20 via-amber-600/5 to-transparent"
+            color: "from-zinc-500/20 via-slate-600/5 to-transparent"
           }));
           setSearchResults(searched);
         }
@@ -90,7 +133,6 @@ export default function App() {
     return () => clearTimeout(delayDebounce);
   }, [searchQuery, trendingMovies]);
 
-  // Genre Discovery Engine Fetch Hook
   const fetchGenreSector = async (genreId, label) => {
     if (!TMDB_API_KEY) return;
     setIsLoadingFeeds(true);
@@ -108,7 +150,7 @@ export default function App() {
           rating: m.vote_average ? m.vote_average.toFixed(1) : '0.0',
           overview: m.overview,
           poster: m.backdrop_path ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}` : null,
-          color: "from-purple-500/20 via-amber-600/5 to-transparent"
+          color: "from-purple-500/20 via-emerald-600/5 to-transparent"
         }));
         setSearchResults(genreMovies);
       }
@@ -121,40 +163,19 @@ export default function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-[#020204] text-white relative overflow-x-hidden selection:bg-amber-500/30 selection:text-white pl-0 md:pl-20">
-        
-        <UniqueLiquidBackground />
-        <Navbar />
-
-        {showLoader && <Preloader onComplete={() => setShowLoader(false)} />}
-        
-        {selectedMovie && (
-          <MovieDetail movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
-        )}
-
-        <div className={`px-6 md:px-12 max-w-6xl mx-auto w-full space-y-16 pb-20 pt-12 relative z-10 transition-all duration-700 ${
-          !showLoader ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-        }`}>
-          
-          <Routes>
-            <Route path="/" element={<Home movies={trendingMovies} setSelectedMovie={setSelectedMovie} />} />
-            <Route path="/genres" element={<Genres onSelectGenre={fetchGenreSector} />} />
-            <Route path="/search" element={
-              <Search 
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                movies={searchResults}
-                setSelectedMovie={setSelectedMovie}
-                isLoadingFeeds={isLoadingFeeds}
-                activeSectorLabel={activeGenreLabel}
-              />
-            } />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
-
-          
-        </div>
-      </div>
+      <AppContent 
+        showLoader={showLoader}
+        setShowLoader={setShowLoader}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        trendingMovies={trendingMovies}
+        searchResults={searchResults}
+        selectedMovie={selectedMovie}
+        setSelectedMovie={setSelectedMovie}
+        isLoadingFeeds={isLoadingFeeds}
+        activeGenreLabel={activeGenreLabel}
+        fetchGenreSector={fetchGenreSector}
+      />
     </Router>
   );
 }

@@ -43,7 +43,7 @@ export default function Genres({ onSelectGenre }) {
     <div className="space-y-12 animate-in fade-in duration-500 flex flex-col min-h-[80vh] justify-between">
       <div className="space-y-12 w-full">
         <header className="space-y-2">
-          <h2 className="text-xs font-black tracking-[0.3em] text-amber-500 uppercase">MOVIE GENRES</h2>
+          <h2 className="text-xs font-black tracking-[0.3em] text-emerald-500 uppercase">MOVIE GENRES</h2>
           <p className="text-zinc-400 text-sm">Navigate the cinematic archives by categorization clusters.</p>
         </header>
 
@@ -57,9 +57,9 @@ export default function Genres({ onSelectGenre }) {
               <div 
                 key={genre.id} 
                 onClick={() => handleGenreClick(genre)}
-                className="group border border-white/[0.05] bg-[#0c0c12]/40 p-6 rounded-2xl hover:border-amber-500/30 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[120px]"
+                className="group border border-white/[0.05] bg-[#0c0c12] p-6 rounded-2xl hover:border-emerald-500/30 cursor-pointer transition-all duration-300 flex flex-col justify-between min-h-[120px]"
               >
-                <h4 className="text-xs font-black tracking-wider text-zinc-300 group-hover:text-amber-500 transition-colors">
+                <h4 className="text-xs font-black tracking-wider text-zinc-300 group-hover:text-emerald-500 transition-colors">
                   {genre.label}
                 </h4>
                 <span className="text-[9px] font-mono text-zinc-600 group-hover:text-zinc-400 mt-4 transition-colors block">
@@ -75,8 +75,8 @@ export default function Genres({ onSelectGenre }) {
             {isLoading ? "SYNCING MATRIX..." : `LIVE SYSTEM OPERATIONAL [ ${genres.length} TARGETS ]`}
           </span>
           <div className="flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
-            <span className={`text-[10px] font-bold uppercase ${isLoading ? 'text-amber-500' : 'text-emerald-500'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-emerald-500 animate-ping' : 'bg-emerald-500'}`} />
+            <span className="text-[10px] font-bold uppercase text-emerald-500">
               {isLoading ? "LOADING MODULE" : "TMDB DATA LINK ACTIVE"}
             </span>
           </div>
@@ -86,13 +86,13 @@ export default function Genres({ onSelectGenre }) {
       <footer className="mt-20 pt-8 border-t border-white/[0.03] space-y-6 w-full">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-6 font-mono text-[9px] tracking-[0.2em] text-zinc-500">
-            <Link to="/" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               HOME
             </Link>
-            <Link to="/genres" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/genres" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               GENRES
             </Link>
-            <Link to="/search" className="hover:text-amber-500 transition-colors flex items-center gap-1">
+            <Link to="/search" className="hover:text-emerald-500 transition-colors flex items-center gap-1">
               SEARCH
             </Link>
           </div>

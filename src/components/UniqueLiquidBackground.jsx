@@ -5,19 +5,11 @@ export default function UniqueLiquidBackground() {
   const canvasRef = useRef(null);
   const location = useLocation();
   
-  // Track location changes using a ref so the animation loop always reads the current page context instantly
   const isContactRef = useRef(location.pathname === '/contact');
 
   useEffect(() => {
     isContactRef.current = location.pathname === '/contact';
   }, [location.pathname]);
-
-  const stateRef = useRef({ 
-    x: -1000, y: -1000, 
-    targetX: -1000, targetY: -1000,
-    vx: 0, vy: 0, // Velocity vector components
-    tearIntensity: 0
-  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,174 +20,121 @@ export default function UniqueLiquidBackground() {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    // Create particle array
+    const particleCount = 75; // Kept light for high-performance rendering
+    const particles = [];
+
+    class Particle {
+      constructor() {
+        this.reset();
+        // Randomize initial positions across the full viewport canvas
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+      }
+
+      reset() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.baseRadius = Math.random() * 1.5 + 0.5;
+        this.radius = this.baseRadius;
+        this.vx = (Math.random() - 0.5) * 0.3; // Very slow natural drift
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.alpha = Math.random() * 0.3 + 0.1; // Faint, subtle ambient opacity
+        this.currentAlpha = this.alpha;
+      }
+
+      update(mouseX, mouseY) {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Wrap around boundaries smoothly
+        if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) {
+          this.reset();
+        }
+
+        // Gentle interactive mouse push field
+        if (mouseX > 0 && mouseY > 0) {
+          const dx = this.x - mouseX;
+          const dy = this.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const forceRadius = 140;
+
+          if (dist < forceRadius) {
+            const force = (forceRadius - dist) / forceRadius;
+            // Push particles out gently along the distance vector
+            this.x += (dx / dist) * force * 1.2;
+            this.y += (dy / dist) * force * 1.2;
+            // Temporarily illuminate particles near the cursor
+            this.currentAlpha = Math.min(this.alpha + force * 0.4, 0.7);
+            this.radius = this.baseRadius + force * 0.8;
+          } else {
+            // Smoothly decay back to native ambient values
+            this.currentAlpha += (this.alpha - this.currentAlpha) * 0.05;
+            this.radius += (this.baseRadius - this.radius) * 0.05;
+          }
+        } else {
+          this.currentAlpha += (this.alpha - this.currentAlpha) * 0.05;
+          this.radius += (this.baseRadius - this.radius) * 0.05;
+        }
+      }
+
+      draw(colorRGB) {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${colorRGB}, ${this.currentAlpha})`;
+        ctx.fill();
+      }
+    }
+
+    // Initialize particle field
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+
+    const mouse = { x: -1000, y: -1000 };
+
+    const handleMouseMove = (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+    };
+
     const handleResize = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
     };
-    window.addEventListener('resize', handleResize);
-
-    let lastTime = performance.now();
-
-    const handleMouseMove = (e) => {
-      const state = stateRef.current;
-      state.targetX = e.clientX;
-      state.targetY = e.clientY;
-      
-      const now = performance.now();
-      const dt = Math.max(now - lastTime, 1);
-      lastTime = now;
-
-      // Calculate direction and speed of the tear
-      const dx = e.clientX - (state.x === -1000 ? e.clientX : state.x);
-      const dy = e.clientY - (state.y === -1000 ? e.clientY : state.y);
-      
-      // Calculate continuous structural shear force
-      state.vx = dx / dt;
-      state.vy = dy / dt;
-      const moveSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy);
-      
-      // Surge the tear magnitude depending on fast slash gestures
-      state.tearIntensity = Math.min(state.tearIntensity + moveSpeed * 4, 150);
-    };
-
-    const handleMouseLeave = () => {
-      stateRef.current.targetX = -1000;
-      stateRef.current.targetY = -1000;
-    };
 
     window.addEventListener('mousemove', handleMouseMove);
     document.body.addEventListener('mouseleave', handleMouseLeave);
-
-    const gridSize = 40; // Tight matrix mesh coordinates
+    window.addEventListener('resize', handleResize);
 
     const render = () => {
-      ctx.clearRect(0, 0, width, height);
-      const state = stateRef.current;
+      // Create a solid deep background layer to prevent matrix grid remnants or bleeding
+      ctx.fillStyle = '#020204';
+      ctx.fillRect(0, 0, width, height);
+
       const isContact = isContactRef.current;
+      // Strict dynamic palette filtering: Amber/Gold for Contact, Premium Mint Green for default app
+      const colorRGB = isContact ? '245, 158, 11' : '16, 185, 129';
 
-      // Dynamic theme color selection
-      const gridColor = isContact ? 'rgba(245, 158, 11, 0.04)' : 'rgba(52, 211, 153, 0.04)';
-      const shadowColor = isContact ? 'rgba(245, 158, 11, 0.8)' : 'rgba(16, 185, 129, 0.8)';
-      const coreStrokeColor = isContact 
-        ? `rgba(254, 243, 199, ${Math.min(state.tearIntensity / 50, 0.9)})`
-        : `rgba(209, 250, 229, ${Math.min(state.tearIntensity / 50, 0.9)})`;
+      // Update and draw the particle array loop
+      particles.forEach((particle) => {
+        particle.update(mouse.x, mouse.y);
+        particle.draw(colorRGB);
+      });
 
-      // Track cursor position with stiff, high-performance tracking
-      state.x += (state.targetX - state.x) * 0.15;
-      state.y += (state.targetY - state.y) * 0.15;
-      
-      // Decay the space tear energy so it snaps back like elastic
-      state.tearIntensity *= 0.92;
-      state.vx *= 0.9;
-      state.vy *= 0.9;
-
-      const tearRadius = 180;
-
-      // Loop over grid points to simulate spatial warping
-      for (let x = 0; x < width; x += gridSize) {
+      // Ambient radial magnetic pointer bloom
+      if (mouse.x > 0 && mouse.y > 0) {
+        const pointerGlow = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, 100);
+        pointerGlow.addColorStop(0, `rgba(${colorRGB}, 0.06)`);
+        pointerGlow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = pointerGlow;
         ctx.beginPath();
-        for (let y = 0; y < height; y += 12) {
-          let drawX = x;
-          let drawY = y;
-
-          if (state.x > 0 && state.y > 0) {
-            const dx = x - state.x;
-            const dy = y - state.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < tearRadius) {
-              // Gravitational pull factor: intense close to the center, dropping off sharply
-              const falloff = Math.pow((tearRadius - dist) / tearRadius, 2.5);
-              
-              // 1. Spatial Pinch: Pull universe coordinates tight along the tear vector
-              drawX -= state.vx * falloff * 8;
-              drawY -= state.vy * falloff * 8;
-
-              // 2. Gravitational Shockwave Refraction
-              // Creates a distinct "lens ring" distortion edge that looks like cracked atmospheric glass
-              const shockwaveRing = Math.sin(dist * 0.08 - state.tearIntensity * 0.05);
-              if (dist > 30) {
-                drawX += (dx / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
-                drawY += (dy / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
-              }
-            }
-          }
-
-          if (y === 0) ctx.moveTo(drawX, drawY);
-          else ctx.lineTo(drawX, drawY);
-        }
-
-        // Draw structural line coordinates
-        ctx.strokeStyle = gridColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      // Horizontal Lines (Drawn second to form the full spatial intersection mesh)
-      for (let y = 0; y < height; y += gridSize) {
-        ctx.beginPath();
-        for (let x = 0; x < width; x += 12) {
-          let drawX = x;
-          let drawY = y;
-
-          if (state.x > 0 && state.y > 0) {
-            const dx = x - state.x;
-            const dy = y - state.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-
-            if (dist < tearRadius) {
-              const falloff = Math.pow((tearRadius - dist) / tearRadius, 2.5);
-              
-              drawX -= state.vx * falloff * 8;
-              drawY -= state.vy * falloff * 8;
-
-              const shockwaveRing = Math.sin(dist * 0.08 - state.tearIntensity * 0.05);
-              if (dist > 30) {
-                drawX += (dx / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
-                drawY += (dy / dist) * shockwaveRing * (state.tearIntensity * 0.3) * falloff;
-              }
-            }
-          }
-
-          if (x === 0) ctx.moveTo(drawX, drawY);
-          else ctx.lineTo(drawX, drawY);
-        }
-        ctx.strokeStyle = gridColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-
-      // Render the actual glowing "Space Tear Rift Line" along the velocity path
-      if (state.x > 0 && state.y > 0 && state.tearIntensity > 5) {
-        ctx.save();
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = shadowColor; // Dynamic Emerald/Gold Core Discharge
-        
-        // Draw a sharp vector line representing the cut through the grid
-        ctx.beginPath();
-        ctx.moveTo(state.x, state.y);
-        ctx.lineTo(state.x - state.vx * 4, state.y - state.vy * 4);
-        ctx.strokeStyle = coreStrokeColor;
-        ctx.lineWidth = Math.min(state.tearIntensity * 0.08, 4);
-        ctx.lineCap = 'round';
-        ctx.stroke();
-        ctx.restore();
-
-        // Chromatic distortion overlay halo centered on the rip
-        const singularityGlow = ctx.createRadialGradient(state.x, state.y, 2, state.x, state.y, tearRadius * 0.6);
-        if (isContact) {
-          singularityGlow.addColorStop(0, 'rgba(120, 53, 4, 0.15)'); // Deep amber glow
-          singularityGlow.addColorStop(0.2, 'rgba(245, 158, 11, 0.04)');
-          singularityGlow.addColorStop(0.6, 'rgba(245, 158, 11, 0.01)');
-        } else {
-          singularityGlow.addColorStop(0, 'rgba(6, 78, 59, 0.15)'); // Original emerald green glow
-          singularityGlow.addColorStop(0.2, 'rgba(16, 185, 129, 0.04)');
-          singularityGlow.addColorStop(0.6, 'rgba(16, 185, 129, 0.01)');
-        }
-        singularityGlow.addColorStop(1, 'rgba(0,0,0,0)');
-        ctx.fillStyle = singularityGlow;
-        ctx.beginPath();
-        ctx.arc(state.x, state.y, tearRadius * 0.6, 0, Math.PI * 2);
+        ctx.arc(mouse.x, mouse.y, 100, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -205,9 +144,9 @@ export default function UniqueLiquidBackground() {
     render();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       document.body.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
@@ -215,8 +154,7 @@ export default function UniqueLiquidBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-0 bg-[#020204]"
-      style={{ mixBlendMode: 'screen' }}
+      className="fixed inset-0 pointer-events-none z-0"
     />
   );
 }
