@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
-export default function Home({ movies, setSelectedMovie }) {
+export default function Home({ movies, setSelectedMovie, favorites = [], toggleFavorite }) {
   return (
     <div className="space-y-12 animate-in fade-in duration-700 flex flex-col min-h-[80vh] justify-between pb-12 pt-4">
       <div className="space-y-16">
@@ -27,37 +28,55 @@ export default function Home({ movies, setSelectedMovie }) {
           <div className="w-full overflow-hidden border-y border-white/[0.04] bg-gradient-to-r from-transparent via-white/[0.01] to-transparent py-12 relative">
             {movies.length > 0 ? (
               <div className="flex flex-row flex-nowrap w-max gap-8 animate-marquee-loop hover:[animation-play-state:paused]">
-                {movies.map((movie, idx) => (
-                  <div 
-                    key={`${movie.id}-${idx}`} 
-                    onClick={() => setSelectedMovie(movie)}
-                    className="w-72 h-48 rounded-2xl border border-white/[0.05] bg-[#0c0c12] p-6 flex flex-col justify-between group hover:border-emerald-500/30 hover:bg-[#11111a] transition-all duration-300 cursor-pointer flex-shrink-0 relative overflow-hidden shadow-2xl"
-                  >
-                    {movie.poster ? (
-                      <div 
-                        className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-500 scale-105 group-hover:scale-100 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${movie.poster})` }}
-                      />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-tr ${movie.color} opacity-25`} />
-                    )}
-                    
-                    <div className="flex justify-between items-start relative z-10">
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg backdrop-blur-sm tracking-wider">
-                        {movie.tags}
-                      </span>
-                    </div>
-                    
-                    <div className="relative z-10 space-y-1.5">
-                      <h4 className="font-bold text-sm tracking-wide text-zinc-200 group-hover:text-white transition-colors line-clamp-2">
-                        {movie.title}
-                      </h4>
-                      <div className="text-[10px] text-zinc-500 font-semibold tracking-wider">
-                        RELEASED • {movie.year}
+                {movies.map((movie, idx) => {
+                  const isFav = favorites.some(f => f.id === movie.id);
+                  return (
+                    <div 
+                      key={`${movie.id}-${idx}`} 
+                      onClick={() => setSelectedMovie(movie)}
+                      className="w-72 h-48 rounded-2xl border border-white/[0.05] bg-[#0c0c12] p-6 flex flex-col justify-between group hover:border-emerald-500/30 hover:bg-[#11111a] transition-all duration-300 cursor-pointer flex-shrink-0 relative overflow-hidden shadow-2xl"
+                    >
+                      {movie.poster ? (
+                        <div 
+                          className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-500 scale-105 group-hover:scale-100 bg-cover bg-center"
+                          style={{ backgroundImage: `url(${movie.poster})` }}
+                        />
+                      ) : (
+                        <div className={`absolute inset-0 bg-gradient-to-tr ${movie.color} opacity-25`} />
+                      )}
+                      
+                      <div className="flex justify-between items-center relative z-10">
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg backdrop-blur-sm tracking-wider">
+                          {movie.tags}
+                        </span>
+                        
+                        {/* FAVORITE BUTTON TERMINAL */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(movie);
+                          }}
+                          className={`p-2 rounded-xl border transition-all duration-300 ${
+                            isFav 
+                              ? 'bg-red-500/10 border-red-500/30 text-red-400' 
+                              : 'bg-white/[0.02] border-white/[0.05] text-zinc-500 hover:text-red-400 hover:border-red-500/20'
+                          }`}
+                        >
+                          <Heart size={12} fill={isFav ? "currentColor" : "none"} className="transition-transform duration-300 active:scale-75" />
+                        </button>
+                      </div>
+                      
+                      <div className="relative z-10 space-y-1.5">
+                        <h4 className="font-bold text-sm tracking-wide text-zinc-200 group-hover:text-white transition-colors line-clamp-2">
+                          {movie.title}
+                        </h4>
+                        <div className="text-[10px] text-zinc-500 font-semibold tracking-wider">
+                          RELEASED • {movie.year}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center text-xs text-zinc-600 py-12 tracking-wider font-mono">

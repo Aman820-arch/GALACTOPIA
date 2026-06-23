@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Send, CheckCircle2, Trophy, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Send, CheckCircle2, Trophy, ShieldCheck } from 'lucide-react';
 
-export default function Contact() {
+export default function Contact({ onAddRequest }) {
   const [formMode, setFormMode] = useState("request");
   const [formData, setFormData] = useState({
     name: "", email: "", movieTitle: "", quality: "4K UHD", message: ""
@@ -22,6 +22,18 @@ export default function Contact() {
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSent(true);
+
+      // If it's a movie request, inject it into the app-wide wishlist pool
+      if (formMode === "request" && formData.movieTitle.trim() && onAddRequest) {
+        onAddRequest({
+          id: Date.now(), // Generate unique temporary runtime ID
+          title: formData.movieTitle.trim(),
+          year: formData.quality, // Storing quality text in year layout slot
+          tag: "REQUESTED", // Clearly identifies custom entries in Profile dashboard
+          overview: formData.message || "Custom user request pending admin validation index tracking."
+        });
+      }
+
       setFormData({ name: "", email: "", movieTitle: "", quality: "4K UHD", message: "" });
       setTimeout(() => setIsSent(false), 5000);
     }, 1400);

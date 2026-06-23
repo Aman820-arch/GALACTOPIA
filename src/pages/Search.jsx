@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
-export default function Search({ searchQuery, setSearchQuery, movies, setSelectedMovie, isLoadingFeeds, activeSectorLabel }) {
+export default function Search({ 
+  searchQuery, setSearchQuery, movies, setSelectedMovie, 
+  isLoadingFeeds, activeSectorLabel, favorites = [], toggleFavorite 
+}) {
   return (
     <div className="space-y-8 animate-in fade-in duration-500 flex flex-col min-h-[80vh] justify-between">
       <div className="space-y-8 w-full">
@@ -33,34 +37,52 @@ export default function Search({ searchQuery, setSearchQuery, movies, setSelecte
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 pt-4">
-          {movies.map((movie, idx) => (
-            <div 
-              key={`${movie.id}-${idx}`} 
-              onClick={() => setSelectedMovie(movie)}
-              className="group rounded-xl border border-white/[0.04] bg-[#0c0c12] p-3 flex flex-col gap-3 hover:border-emerald-500/30 transition-all duration-300 cursor-pointer"
-            >
-              <div className="aspect-[16/10] w-full rounded-lg bg-zinc-900 overflow-hidden relative">
-                {movie.poster ? (
-                  <div 
-                    className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ backgroundImage: `url(${movie.poster})` }}
-                  />
-                ) : (
-                  <div className={`w-full h-full bg-gradient-to-tr ${movie.color} opacity-20`} />
-                )}
-              </div>
-              
-              <div className="space-y-1 px-1">
-                <h4 className="font-bold text-xs tracking-wide text-zinc-200 group-hover:text-white transition-colors line-clamp-1">
-                  {movie.title}
-                </h4>
-                <div className="flex justify-between items-center text-[10px] text-zinc-500">
-                  <span>{movie.year}</span>
-                  <span className="text-emerald-400 font-semibold">{movie.tags}</span>
+          {movies.map((movie, idx) => {
+            const isFav = favorites.some(f => f.id === movie.id);
+            return (
+              <div 
+                key={`${movie.id}-${idx}`} 
+                onClick={() => setSelectedMovie(movie)}
+                className="group rounded-xl border border-white/[0.04] bg-[#0c0c12] p-3 flex flex-col gap-3 hover:border-emerald-500/30 transition-all duration-300 cursor-pointer relative"
+              >
+                <div className="aspect-[16/10] w-full rounded-lg bg-zinc-900 overflow-hidden relative">
+                  {movie.poster ? (
+                    <div 
+                      className="w-full h-full bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity duration-300"
+                      style={{ backgroundImage: `url(${movie.poster})` }}
+                    />
+                  ) : (
+                    <div className={`w-full h-full bg-gradient-to-tr ${movie.color} opacity-20`} />
+                  )}
+
+                  {/* MINI FAVORITE INTERFACE OVERLAY */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(movie);
+                    }}
+                    className={`absolute top-2 right-2 p-1.5 rounded-lg border transition-all duration-300 backdrop-blur-md opacity-60 group-hover:opacity-100 ${
+                      isFav 
+                        ? 'bg-red-500/20 border-red-500/40 text-red-400' 
+                        : 'bg-[#09090d]/80 border-white/[0.05] text-zinc-400 hover:text-red-400 hover:border-red-500/30'
+                    }`}
+                  >
+                    <Heart size={11} fill={isFav ? "currentColor" : "none"} className="active:scale-75 transition-transform" />
+                  </button>
+                </div>
+                
+                <div className="space-y-1 px-1">
+                  <h4 className="font-bold text-xs tracking-wide text-zinc-200 group-hover:text-white transition-colors line-clamp-1">
+                    {movie.title}
+                  </h4>
+                  <div className="flex justify-between items-center text-[10px] text-zinc-500">
+                    <span>{movie.year}</span>
+                    <span className="text-emerald-400 font-semibold">{movie.tags}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {movies.length === 0 && !isLoadingFeeds && (

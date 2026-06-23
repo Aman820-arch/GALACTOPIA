@@ -5,88 +5,127 @@ export default function Auth() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({ email: '', password: '', username: '' });
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Simulate back-end approval & initialize localStorage session data
     const mockSession = { 
       username: formData.username || formData.email.split('@')[0].toUpperCase(), 
       email: formData.email.toLowerCase() 
     };
-    
     localStorage.setItem('user', JSON.stringify(mockSession));
-    
-    // Smooth navigation straight to the freshly cleared dashboard account hub
     navigate('/profile');
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center animate-in fade-in duration-500 py-6">
-      <div className="w-full max-w-md border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-8 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
-        <header className="space-y-2 text-center">
-          <h2 className="text-xs font-black tracking-[0.3em] text-emerald-500 uppercase">
-            {isLogin ? "IDENTITY VERIFICATION" : "ACCOUNT REGISTRATION"}
-          </h2>
-          <p className="text-zinc-400 text-xs">
-            {isLogin ? "Access your personalized archival streams." : "Create a new portal access profile."}
-          </p>
-        </header>
+    <div className="min-h-[75vh] flex items-center justify-center animate-in fade-in zoom-in-95 duration-500 py-6 select-none">
+      <div className="w-full max-w-md relative group">
+        
+        {/* EXTERNAL NEON CORNER AMBIENT GLOW */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500/10 via-purple-500/5 to-emerald-500/10 rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition duration-1000" />
+        
+        {/* MAIN STRUCTURAL DECK */}
+        <div className="relative w-full border border-white/[0.06] bg-[#050508]/60 backdrop-blur-xl p-8 rounded-2xl shadow-[0_24px_60px_-15px_rgba(0,0,0,0.8)] space-y-8 overflow-hidden">
+          
+          {/* TOP DESIGN ACCENT LINES */}
+          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
+          <div className="absolute top-2 right-4 font-mono text-[8px] text-zinc-600 tracking-widest">
+            SYS.SEC_LN // {isLogin ? "01" : "02"}
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Username</label>
-              <input 
-                type="text" 
-                required
-                className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/40 transition-colors"
-                placeholder="AMAN"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
+          {/* PORTAL HEADER */}
+          <header className="space-y-2 text-center relative">
+            <h2 className="text-xs font-black tracking-[0.4em] text-emerald-400 uppercase drop-shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+              {isLogin ? "IDENTITY CREDENTIAL SCAN" : "NEW CORE PROVISION"}
+            </h2>
+            <p className="text-zinc-500 font-mono text-[9px] tracking-wide uppercase">
+              {isLogin ? "PROCEED WITH ARCHIVAL CLEARANCE" : "INITIALIZING INTERFACE PARAMETERS"}
+            </p>
+          </header>
+
+          {/* INTERACTIVE INPUT FIELD MATRIX */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {!isLogin && (
+              <div className="space-y-1.5 relative group/field">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase">OPERATOR NAME</label>
+                  {focusedField === 'username' && <span className="text-[8px] font-mono text-emerald-400 animate-pulse">AWAITING INPUT</span>}
+                </div>
+                <div className={`relative transition-all duration-300 rounded-xl border ${focusedField === 'username' ? 'border-emerald-500/40 bg-emerald-500/[0.02]' : 'border-white/[0.05] bg-white/[0.01]'}`}>
+                  <input 
+                    type="text" 
+                    required
+                    onFocus={() => setFocusedField('username')}
+                    onBlur={() => setFocusedField(null)}
+                    className="w-full bg-transparent px-4 py-3.5 text-sm text-white focus:outline-none placeholder-zinc-700 tracking-wide font-medium"
+                    placeholder="E.g., AMAN"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1.5 relative group/field">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase">MATRIX ADDR</label>
+                {focusedField === 'email' && <span className="text-[8px] font-mono text-emerald-400 animate-pulse">VERIFYING PATH</span>}
+              </div>
+              <div className={`relative transition-all duration-300 rounded-xl border ${focusedField === 'email' ? 'border-emerald-500/40 bg-emerald-500/[0.02]' : 'border-white/[0.05] bg-white/[0.01]'}`}>
+                <input 
+                  type="email" 
+                  required
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  className="w-full bg-transparent px-4 py-3.5 text-sm text-white focus:outline-none placeholder-zinc-700 tracking-wide font-medium"
+                  placeholder="name@domain.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
             </div>
-          )}
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Email Address</label>
-            <input 
-              type="email" 
-              required
-              className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/40 transition-colors"
-              placeholder="name@domain.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
+            <div className="space-y-1.5 relative group/field">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-[9px] font-mono tracking-widest text-zinc-400 uppercase">ENCRYPT PASSKEY</label>
+                {focusedField === 'password' && <span className="text-[8px] font-mono text-emerald-400 animate-pulse">BUFFERING SEGMENT</span>}
+              </div>
+              <div className={`relative transition-all duration-300 rounded-xl border ${focusedField === 'password' ? 'border-emerald-500/40 bg-emerald-500/[0.02]' : 'border-white/[0.05] bg-white/[0.01]'}`}>
+                <input 
+                  type="password" 
+                  required
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  className="w-full bg-transparent px-4 py-3.5 text-sm text-white focus:outline-none placeholder-zinc-700 tracking-widest"
+                  placeholder="••••••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* NEON SUBMIT BUTTON */}
+            <button 
+              type="submit" 
+              className="w-full mt-4 relative group/btn overflow-hidden rounded-xl border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500 hover:text-black py-4 transition-all duration-300 active:scale-[0.98]"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500" />
+              <span className="relative z-10 text-[11px] font-mono font-black tracking-[0.25em] uppercase transition-colors duration-300">
+                {isLogin ? "ENGAGE ACCESS LINK" : "COMPILE NEW INSTANCE"}
+              </span>
+            </button>
+          </form>
+
+          {/* TOGGLE ARCHITECTURE LINKS */}
+          <div className="text-center pt-2 relative border-t border-white/[0.03]">
+            <button 
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-[9px] font-mono tracking-[0.15em] text-zinc-500 hover:text-emerald-400 transition-colors uppercase"
+            >
+              {isLogin ? "► REGISTER PORTAL ROUTE // SIGN UP" : "◄ ACCESS REGISTERED NODE // LOG IN"}
+            </button>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-mono tracking-wider text-zinc-500 uppercase">Security Code</label>
-            <input 
-              type="password" 
-              required
-              className="w-full bg-white/[0.02] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/40 transition-colors"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-            />
-          </div>
-
-          <button 
-            type="submit" 
-            className="w-full mt-2 bg-emerald-500 hover:bg-emerald-600 text-black font-bold text-xs tracking-widest uppercase py-3.5 rounded-xl transition-all shadow-lg shadow-emerald-500/10 active:scale-[0.99]"
-          >
-            {isLogin ? "AUTHORIZE ACCESS" : "INITIALIZE INSTANCE"}
-          </button>
-        </form>
-
-        <div className="text-center pt-2">
-          <button 
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-[10px] font-mono tracking-wider text-zinc-500 hover:text-emerald-400 transition-colors uppercase"
-          >
-            {isLogin ? "Request New Portal Access // Sign Up" : "Existing Clearance // Log In"}
-          </button>
         </div>
       </div>
     </div>
