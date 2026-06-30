@@ -6,7 +6,7 @@ export default function Home({ movies, setSelectedMovie, favorites = [], toggleF
   return (
     <div className="space-y-12 animate-in fade-in duration-700 flex flex-col min-h-[80vh] justify-between pb-12 pt-4">
       <div className="space-y-16">
-        
+
         {/* HERO TYPOGRAPHY SECTION */}
         <header className="max-w-4xl space-y-4 pt-4">
           <h1 className="text-xs font-black tracking-[0.5em] text-emerald-500 uppercase select-none">
@@ -15,7 +15,7 @@ export default function Home({ movies, setSelectedMovie, favorites = [], toggleF
           <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase leading-[1.0] text-white select-none">
             Cinematic universe <br />
             <span className="text-zinc-500 block mt-1">
-              without limits  
+              without limits
             </span>
           </h2>
           <p className="text-zinc-400 text-sm md:text-base max-w-xl font-medium leading-relaxed pt-1 tracking-wide">
@@ -29,43 +29,44 @@ export default function Home({ movies, setSelectedMovie, favorites = [], toggleF
             {movies.length > 0 ? (
               <div className="flex flex-row flex-nowrap w-max gap-8 animate-marquee-loop hover:[animation-play-state:paused]">
                 {movies.map((movie, idx) => {
-                  const isFav = favorites.some(f => f.id === movie.id);
+                  const isFav = favorites.some(
+                    f => (f.movie_id ?? f.id) === movie.id
+                  );
                   return (
-                    <div 
-                      key={`${movie.id}-${idx}`} 
+                    <div
+                      key={`${movie.id}-${idx}`}
                       onClick={() => setSelectedMovie(movie)}
                       className="w-72 h-48 rounded-2xl border border-white/[0.05] bg-[#0c0c12] p-6 flex flex-col justify-between group hover:border-emerald-500/30 hover:bg-[#11111a] transition-all duration-300 cursor-pointer flex-shrink-0 relative overflow-hidden shadow-2xl"
                     >
                       {movie.poster ? (
-                        <div 
+                        <div
                           className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-all duration-500 scale-105 group-hover:scale-100 bg-cover bg-center"
                           style={{ backgroundImage: `url(${movie.poster})` }}
                         />
                       ) : (
                         <div className={`absolute inset-0 bg-gradient-to-tr ${movie.color} opacity-25`} />
                       )}
-                      
+
                       <div className="flex justify-between items-center relative z-10">
                         <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg backdrop-blur-sm tracking-wider">
                           {movie.tags}
                         </span>
-                        
+
                         {/* FAVORITE BUTTON TERMINAL */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleFavorite(movie);
                           }}
-                          className={`p-2 rounded-xl border transition-all duration-300 ${
-                            isFav 
-                              ? 'bg-red-500/10 border-red-500/30 text-red-400' 
+                          className={`p-2 rounded-xl border transition-all duration-300 ${isFav
+                              ? 'bg-red-500/10 border-red-500/30 text-red-400'
                               : 'bg-white/[0.02] border-white/[0.05] text-zinc-500 hover:text-red-400 hover:border-red-500/20'
-                          }`}
+                            }`}
                         >
                           <Heart size={12} fill={isFav ? "currentColor" : "none"} className="transition-transform duration-300 active:scale-75" />
                         </button>
                       </div>
-                      
+
                       <div className="relative z-10 space-y-1.5">
                         <h4 className="font-bold text-sm tracking-wide text-zinc-200 group-hover:text-white transition-colors line-clamp-2">
                           {movie.title}
@@ -108,10 +109,10 @@ export default function Home({ movies, setSelectedMovie, favorites = [], toggleF
           <div className="uppercase">
             © {new Date().getFullYear()} GALACTOPIA ARCHIVE. DEVELOPED BY <span className="text-zinc-300 font-bold">AMAN</span>
           </div>
-          
-          <a 
-            href="https://github.com/YOUR_GITHUB_USERNAME" 
-            target="_blank" 
+
+          <a
+            href="https://github.com/YOUR_GITHUB_USERNAME"
+            target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/[0.01] border border-white/[0.04] text-zinc-400 hover:text-white hover:border-white/10 hover:bg-white/[0.03] transition-all shadow-sm"
           >

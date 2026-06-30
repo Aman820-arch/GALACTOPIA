@@ -15,6 +15,15 @@ import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import Admin from './pages/Admin';
 
+import {
+  getFavorites,
+  addFavorite,
+  removeFavorite,
+  getWatchlist,
+  addWatchlist,
+  removeWatchlist
+} from "./api/api";
+
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
 function AppContent() {
@@ -178,14 +187,50 @@ function AppContent() {
   useEffect(() => {
     try {
       localStorage.setItem('continueWatching', JSON.stringify(continueWatching));
-      localStorage.setItem('watchlist', JSON.stringify(watchlist));
       localStorage.setItem('wishlist', JSON.stringify(wishlist));
       localStorage.setItem('watchedHistory', JSON.stringify(watchedHistory));
-      localStorage.setItem('favorites', JSON.stringify(favorites));
     } catch (err) {
       console.error("Failed saving application state changes to local storage:", err);
     }
-  }, [continueWatching, watchlist, wishlist, watchedHistory, favorites]);
+  }, [continueWatching, wishlist, watchedHistory]);
+
+  useEffect(() => {
+  const loadFavorites = async () => {
+    const userString = localStorage.getItem("user");
+
+    if (!userString) return;
+
+    const user = JSON.parse(userString);
+
+    try {
+      const data = await getFavorites(user.email);
+      setFavorites(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadFavorites();
+}, []);
+
+useEffect(() => {
+  const loadWatchlist = async () => {
+    const userString = localStorage.getItem("user");
+
+    if (!userString) return;
+
+    const user = JSON.parse(userString);
+
+    try {
+      const data = await getWatchlist(user.email);
+      setWatchlist(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadWatchlist();
+}, []);
 
   const handlePlayMovie = (movie) => {
     setSelectedMovie(movie);
@@ -208,25 +253,101 @@ function AppContent() {
     });
   };
 
-  const toggleWatchlist = (movie) => {
-    setWatchlist(prev => {
-      const exists = prev.find(m => m.id === movie.id);
-      if (exists) return prev.filter(m => m.id !== movie.id);
-      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
-    });
+  const toggleWatchlist = async (movie) => {
+
+  const userString = localStorage.getItem("user");
+
+  if (!userString) {
+    alert("Please login first.");
+    return;
+  }
+
+  const user = JSON.parse(userString);
+
+  const exists = watchlist.find(
+    (w) => (w.movie_id ?? w.id) === movie.id
+  );
+
+  if (exists) {
+
+    const response = await removeWatchlist(
+      user.email,
+      movie.id
+    );
+
+    if (response.success) {
+      setWatchlist(prev =>
+        prev.filter(
+          w => (w.movie_id ?? w.id) !== movie.id
+        )
+      );
+    }
+
+    return;
+  }
+
+  const watchMovie = {
+    movie_id: movie.id,
+    title: movie.title,
+    poster: movie.poster,
+    year: movie.year,
+    tag: activeGenreLabel || "FEATURED",
+    email: user.email
   };
+
+  const response = await addWatchlist(watchMovie);
+
+  if (response.success) {
+    setWatchlist(prev => [...prev, watchMovie]);
+  }
+
+};
 
   const handleAddWishlistRequest = (customOrder) => {
     setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
   };
 
-  const toggleFavorite = (movie) => {
-    setFavorites(prev => {
-      const exists = prev.find(m => m.id === movie.id);
-      if (exists) return prev.filter(m => m.id !== movie.id);
-      return [...prev, { ...movie, tag: activeGenreLabel || "FEATURED" }];
-    });
+  const toggleFavorite = async (movie) => {
+  const userString = localStorage.getItem("user");
+
+  if (!userString) {
+    alert("Please login first.");
+    return;
+  }
+
+  const user = JSON.parse(userString);
+
+  const exists = favorites.find(
+    (f) => (f.movie_id ?? f.id) === movie.id
+  );
+
+  if (exists) {
+    const response = await removeFavorite(user.email, movie.id);
+
+    if (response.success) {
+      setFavorites((prev) =>
+        prev.filter((f) => (f.movie_id ?? f.id) !== movie.id)
+      );
+    }
+
+    return;
+  }
+
+  const favoriteMovie = {
+    movie_id: movie.id,
+    title: movie.title,
+    poster: movie.poster,
+    year: movie.year,
+    tag: activeGenreLabel || "FEATURED",
+    email: user.email,
   };
+
+  const response = await addFavorite(favoriteMovie);
+
+  if (response.success) {
+    setFavorites((prev) => [...prev, favoriteMovie]);
+  }
+};
 
   // Dynamic assignment of text selection highlights based on route paths
   const getSelectionStyles = () => {

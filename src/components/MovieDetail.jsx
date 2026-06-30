@@ -23,7 +23,9 @@ export default function MovieDetail({
 
   if (!movie) return null;
 
-  const isFav = favorites.some(f => f.id === movie.id);
+  const isFav = favorites.some(
+  f => (f.movie_id ?? f.id) === movie.id
+);
   const isWatch = watchlist.some(w => w.id === movie.id); // <-- Watchlist array validation Check
 
   const posterUrl = movie.poster 
