@@ -8,6 +8,7 @@ from routes.favorites import router as favorites_router
 from routes.watchlists import router as watchlist_router
 from routes.continue_watching import router as continue_router
 from routes.history import router as history_router
+from routes.movie_requests import router as movie_requests_router
 
 load_dotenv()
 
@@ -52,6 +53,12 @@ app.include_router(
     history_router,
     prefix="/history",
     tags=["History"]
+)
+
+app.include_router(
+    movie_requests_router,
+    prefix="/movie-requests",
+    tags=["Movie Requests"]
 )
 
 @app.get("/")
