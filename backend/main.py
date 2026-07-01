@@ -7,6 +7,7 @@ from routes.auth import router as auth_router
 from routes.favorites import router as favorites_router
 from routes.watchlists import router as watchlist_router
 from routes.continue_watching import router as continue_router
+from routes.history import router as history_router
 
 load_dotenv()
 
@@ -45,6 +46,12 @@ app.include_router(
     continue_router,
     prefix="/continue",
     tags=["Continue Watching"]
+)
+
+app.include_router(
+    history_router,
+    prefix="/history",
+    tags=["History"]
 )
 
 @app.get("/")
