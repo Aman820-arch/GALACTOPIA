@@ -21,7 +21,11 @@ import {
   removeFavorite,
   getWatchlist,
   addWatchlist,
-  removeWatchlist
+  removeWatchlist,
+  getContinueWatching,
+  saveContinueWatching,
+  getHistory,
+  saveHistory
 } from "./api/api";
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -90,6 +94,24 @@ function AppContent() {
       return [];
     }
   });
+
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem("user");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    const updateUser = () => {
+      const saved = localStorage.getItem("user");
+      setUser(saved ? JSON.parse(saved) : null);
+    };
+
+    window.addEventListener("userChanged", updateUser);
+
+    return () => {
+      window.removeEventListener("userChanged", updateUser);
+    };
+  }, []);
 
   // DATA SYNC HOOKS FOR LIVE MOVIE DISCOVERY DATA STREAMS
   useEffect(() => {
@@ -195,159 +217,233 @@ function AppContent() {
   }, [continueWatching, wishlist, watchedHistory]);
 
   useEffect(() => {
-  const loadFavorites = async () => {
-    const userString = localStorage.getItem("user");
+    const loadFavorites = async () => {
+      const userString = localStorage.getItem("user");
 
-    if (!userString) return;
+      if (!userString) return;
 
-    const user = JSON.parse(userString);
+      const user = JSON.parse(userString);
 
-    try {
-      const data = await getFavorites(user.email);
-      setFavorites(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      try {
+        const data = await getFavorites(user.email);
+        setFavorites(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  loadFavorites();
-}, []);
+    loadFavorites();
+  }, [user]);
 
-useEffect(() => {
-  const loadWatchlist = async () => {
-    const userString = localStorage.getItem("user");
+  useEffect(() => {
+    const loadWatchlist = async () => {
+      const userString = localStorage.getItem("user");
 
-    if (!userString) return;
+      if (!userString) return;
 
-    const user = JSON.parse(userString);
+      const user = JSON.parse(userString);
 
-    try {
-      const data = await getWatchlist(user.email);
-      setWatchlist(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      try {
+        const data = await getWatchlist(user.email);
+        setWatchlist(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  loadWatchlist();
-}, []);
+    loadWatchlist();
+  }, [user]);
 
-  const handlePlayMovie = (movie) => {
+  useEffect(() => {
+    const loadContinueWatching = async () => {
+      const userString = localStorage.getItem("user");
+
+      if (!userString) return;
+
+      const user = JSON.parse(userString);
+
+      try {
+        const data = await getContinueWatching(user.email);
+
+        console.log("Continue Watching API:", data);
+        console.log("Is Array:", Array.isArray(data));
+
+        setContinueWatching(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadContinueWatching();
+  }, [user]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      const userString = localStorage.getItem("user");
+
+      if (!userString) return;
+
+      const user = JSON.parse(userString);
+
+      try {
+        const data = await getHistory(user.email);
+        setWatchedHistory(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadHistory();
+  }, [user]);
+
+  const handlePlayMovie = async (movie) => {
     setSelectedMovie(movie);
 
-    setContinueWatching(prev => {
-      if (prev.find(m => m.id === movie.id)) return prev;
-      return [{
-        id: movie.id,
-        title: movie.title,
-        poster: movie.poster,
-        progress: 0,
-        year: movie.year,
-        tag: activeGenreLabel || "FEATURED"
-      }, ...prev];
-    });
+    const userString = localStorage.getItem("user");
 
-    setWatchedHistory(prev => {
-      if (prev.find(m => m.id === movie.id)) return prev;
-      return [{ id: movie.id, title: movie.title, watchedAt: "JUST NOW" }, ...prev];
-    });
+    if (userString) {
+      const user = JSON.parse(userString);
+
+      const exists = continueWatching.find(
+        (m) => (m.movie_id ?? m.id) === movie.id
+      );
+
+      if (!exists) {
+        const continueMovie = {
+          movie_id: movie.id,
+          title: movie.title,
+          poster: movie.poster,
+          year: movie.year,
+          progress: 0,
+          tag: activeGenreLabel || "FEATURED",
+          email: user.email
+        };
+
+        await saveContinueWatching(continueMovie);
+
+        setContinueWatching(prev => [continueMovie, ...prev]);
+      }
+    }
+
+    const userString2 = localStorage.getItem("user");
+
+    if (userString2) {
+      const user = JSON.parse(userString2);
+
+      const exists = watchedHistory.find(
+        (m) => (m.movie_id ?? m.id) === movie.id
+      );
+
+      if (!exists) {
+        const historyMovie = {
+          movie_id: movie.id,
+          title: movie.title,
+          watchedAt: "JUST NOW",
+          email: user.email
+        };
+
+        await saveHistory(historyMovie);
+
+        setWatchedHistory(prev => [historyMovie, ...prev]);
+      }
+    }
   };
 
   const toggleWatchlist = async (movie) => {
 
-  const userString = localStorage.getItem("user");
+    const userString = localStorage.getItem("user");
 
-  if (!userString) {
-    alert("Please login first.");
-    return;
-  }
-
-  const user = JSON.parse(userString);
-
-  const exists = watchlist.find(
-    (w) => (w.movie_id ?? w.id) === movie.id
-  );
-
-  if (exists) {
-
-    const response = await removeWatchlist(
-      user.email,
-      movie.id
-    );
-
-    if (response.success) {
-      setWatchlist(prev =>
-        prev.filter(
-          w => (w.movie_id ?? w.id) !== movie.id
-        )
-      );
+    if (!userString) {
+      alert("Please login first.");
+      return;
     }
 
-    return;
-  }
+    const user = JSON.parse(userString);
 
-  const watchMovie = {
-    movie_id: movie.id,
-    title: movie.title,
-    poster: movie.poster,
-    year: movie.year,
-    tag: activeGenreLabel || "FEATURED",
-    email: user.email
+    const exists = watchlist.find(
+      (w) => (w.movie_id ?? w.id) === movie.id
+    );
+
+    if (exists) {
+
+      const response = await removeWatchlist(
+        user.email,
+        movie.id
+      );
+
+      if (response.success) {
+        setWatchlist(prev =>
+          prev.filter(
+            w => (w.movie_id ?? w.id) !== movie.id
+          )
+        );
+      }
+
+      return;
+    }
+
+    const watchMovie = {
+      movie_id: movie.id,
+      title: movie.title,
+      poster: movie.poster,
+      year: movie.year,
+      tag: activeGenreLabel || "FEATURED",
+      email: user.email
+    };
+
+    const response = await addWatchlist(watchMovie);
+
+    if (response.success) {
+      setWatchlist(prev => [...prev, watchMovie]);
+    }
+
   };
-
-  const response = await addWatchlist(watchMovie);
-
-  if (response.success) {
-    setWatchlist(prev => [...prev, watchMovie]);
-  }
-
-};
 
   const handleAddWishlistRequest = (customOrder) => {
     setWishlist(prev => [...prev, { ...customOrder, id: customOrder.id || Date.now() }]);
   };
 
   const toggleFavorite = async (movie) => {
-  const userString = localStorage.getItem("user");
+    const userString = localStorage.getItem("user");
 
-  if (!userString) {
-    alert("Please login first.");
-    return;
-  }
-
-  const user = JSON.parse(userString);
-
-  const exists = favorites.find(
-    (f) => (f.movie_id ?? f.id) === movie.id
-  );
-
-  if (exists) {
-    const response = await removeFavorite(user.email, movie.id);
-
-    if (response.success) {
-      setFavorites((prev) =>
-        prev.filter((f) => (f.movie_id ?? f.id) !== movie.id)
-      );
+    if (!userString) {
+      alert("Please login first.");
+      return;
     }
 
-    return;
-  }
+    const user = JSON.parse(userString);
 
-  const favoriteMovie = {
-    movie_id: movie.id,
-    title: movie.title,
-    poster: movie.poster,
-    year: movie.year,
-    tag: activeGenreLabel || "FEATURED",
-    email: user.email,
+    const exists = favorites.find(
+      (f) => (f.movie_id ?? f.id) === movie.id
+    );
+
+    if (exists) {
+      const response = await removeFavorite(user.email, movie.id);
+
+      if (response.success) {
+        setFavorites((prev) =>
+          prev.filter((f) => (f.movie_id ?? f.id) !== movie.id)
+        );
+      }
+
+      return;
+    }
+
+    const favoriteMovie = {
+      movie_id: movie.id,
+      title: movie.title,
+      poster: movie.poster,
+      year: movie.year,
+      tag: activeGenreLabel || "FEATURED",
+      email: user.email,
+    };
+
+    const response = await addFavorite(favoriteMovie);
+
+    if (response.success) {
+      setFavorites((prev) => [...prev, favoriteMovie]);
+    }
   };
-
-  const response = await addFavorite(favoriteMovie);
-
-  if (response.success) {
-    setFavorites((prev) => [...prev, favoriteMovie]);
-  }
-};
 
   // Dynamic assignment of text selection highlights based on route paths
   const getSelectionStyles = () => {
@@ -420,16 +516,16 @@ useEffect(() => {
               />
             }
           />
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
-              <Admin 
-                wishlist={wishlist} 
-                setWishlist={setWishlist} 
-                setTrendingMovies={setTrendingMovies} 
-                setSearchResults={setSearchResults} 
+              <Admin
+                wishlist={wishlist}
+                setWishlist={setWishlist}
+                setTrendingMovies={setTrendingMovies}
+                setSearchResults={setSearchResults}
               />
-            } 
+            }
           />
         </Routes>
       </div>

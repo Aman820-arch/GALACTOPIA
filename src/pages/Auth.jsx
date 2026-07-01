@@ -54,13 +54,16 @@ export default function Auth() {
       }
 
       if (isLogin) {
-        localStorage.setItem(
-          'user',
-          JSON.stringify(data.user)
-        );
+  localStorage.setItem(
+    "user",
+    JSON.stringify(data.user)
+  );
 
-        navigate('/profile');
-      } else {
+  // Tell App.jsx that a user has logged in
+  window.dispatchEvent(new Event("userChanged"));
+
+  navigate("/profile");
+} else {
         alert('Account created successfully! Please login.');
 
         setIsLogin(true);

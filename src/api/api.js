@@ -86,18 +86,37 @@ export async function removeWatchlist(email, movie_id) {
   return await res.json();
 }
 
-export async function getContinue(email) {
-  const res = await fetch(`${BASE_URL}/continue/${email}`);
+export async function getContinueWatching(email) {
+  const res = await fetch(`${API_URL}/continue/${email}`);
   return await res.json();
 }
 
-export async function saveContinue(movie) {
-  const res = await fetch(`${BASE_URL}/continue/save`, {
+export async function saveContinueWatching(movie) {
+  const res = await fetch(`${API_URL}/continue/save`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(movie)
+    body: JSON.stringify(movie),
+  });
+
+  return await res.json();
+}
+
+// HISTORY
+
+export async function getHistory(email) {
+  const res = await fetch(`${API_URL}/history/${email}`);
+  return await res.json();
+}
+
+export async function saveHistory(movie) {
+  const res = await fetch(`${API_URL}/history/save`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(movie),
   });
 
   return await res.json();

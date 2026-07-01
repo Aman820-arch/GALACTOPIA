@@ -72,7 +72,7 @@ export default function Profile({ continueWatching = [], watchlist = [], wishlis
                 </div>
               ) : (
                 continueWatching.map((movie) => (
-                  <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-4 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex gap-4 items-center shadow-xl">
+                  <div key={movie.movie_id ?? movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-4 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex gap-4 items-center shadow-xl">
                     <div className="w-20 h-28 bg-zinc-900 rounded-lg overflow-hidden flex-shrink-0 border border-white/[0.05] flex items-center justify-center">
                       {movie.poster ? (
                         <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -111,7 +111,7 @@ export default function Profile({ continueWatching = [], watchlist = [], wishlis
                 </div>
               ) : (
                 favorites.map((movie) => (
-                  <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-3 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center gap-4 shadow-xl">
+                  <div key={movie.movie_id ?? movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-3 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center gap-4 shadow-xl">
                     <div className="w-12 h-16 bg-zinc-900 rounded-md overflow-hidden flex-shrink-0 border border-white/[0.05] flex items-center justify-center">
                       {movie.poster ? (
                         <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
@@ -140,7 +140,7 @@ export default function Profile({ continueWatching = [], watchlist = [], wishlis
                 </div>
               ) : (
                 watchlist.map((movie) => (
-                  <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-3 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center gap-4 shadow-xl">
+                  <div key={movie.movie_id ?? movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-3 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center gap-4 shadow-xl">
                     <div className="w-12 h-16 bg-zinc-900 rounded-md overflow-hidden flex-shrink-0 border border-white/[0.05] flex items-center justify-center">
                       {movie.poster ? (
                         <img src={movie.poster} alt={movie.title} className="w-full h-full object-cover" />
@@ -169,7 +169,7 @@ export default function Profile({ continueWatching = [], watchlist = [], wishlis
                 </div>
               ) : (
                 wishlist.map((movie) => (
-                  <div key={movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-5 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center justify-between shadow-xl">
+                  <div key={movie.movie_id ?? movie.id} className="group relative border border-white/[0.05] bg-white/[0.01] backdrop-blur-md p-5 rounded-xl hover:border-zinc-500/30 transition-all duration-300 flex items-center justify-between shadow-xl">
                     <div className="space-y-1">
                       <h4 className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors uppercase tracking-wider">{movie.title}</h4>
                       <p className="text-[10px] font-mono text-zinc-500">{movie.tag || "CUSTOM REQUEST"} {movie.year ? `• ${movie.year}` : ''}</p>
@@ -192,7 +192,7 @@ export default function Profile({ continueWatching = [], watchlist = [], wishlis
               ) : (
                 <div className="border border-white/[0.03] rounded-xl overflow-hidden bg-white/[0.01]">
                   {watchedHistory.map((movie, index) => (
-                    <div key={movie.id} className={`flex justify-between items-center px-6 py-4 text-xs font-medium ${
+                    <div key={movie.movie_id ?? movie.id} className={`flex justify-between items-center px-6 py-4 text-xs font-medium ${
                       index !== watchedHistory.length - 1 ? 'border-b border-white/[0.03]' : ''
                     }`}>
                       <div className="flex items-center gap-3">
