@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, MessageSquare, ShieldCheck } from 'lucide-react';
 
+import { addMovieRequest } from '../api/api';
+
 export default function Contact({ onAddRequest }) {
   const [formMode, setFormMode] = useState("request");
   const [formData, setFormData] = useState({
     name: "", email: "", movieTitle: "", quality: "4K UHD", message: ""
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
 
@@ -14,40 +16,57 @@ export default function Contact({ onAddRequest }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    setTimeout(() => {
+
+    try {
+      const response = await addMovieRequest({
+        name: formData.name,
+        email: formData.email,
+        type: formMode,
+        movieTitle: formData.movieTitle,
+        quality: formData.quality,
+        message: formData.message,
+        status: "Pending"
+      });
+
+      if (!response.success) {
+        alert(response.message);
+        setIsSubmitting(false);
+        return;
+      }
+
       setIsSubmitting(false);
       setIsSent(true);
 
-      // Inject into the profile's wishlist pool if it's a valid movie request
-      if (formMode === "request" && formData.movieTitle.trim() && onAddRequest) {
-        onAddRequest({
-          id: Date.now(),
-          title: formData.movieTitle.trim(),
-          year: formData.quality, 
-          tag: "REQUESTED",
-          overview: formData.message || "Custom user request pending admin validation."
-        });
-      }
+      setFormData({
+        name: "",
+        email: "",
+        movieTitle: "",
+        quality: "4K UHD",
+        message: ""
+      });
 
-      setFormData({ name: "", email: "", movieTitle: "", quality: "4K UHD", message: "" });
       setTimeout(() => setIsSent(false), 5000);
-    }, 1400);
+
+    } catch (err) {
+      console.error(err);
+      alert("Unable to submit request.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-[80vh] flex flex-col justify-between items-center py-4 animate-in fade-in zoom-in-95 duration-500">
-      
+
       <div className="flex-1 flex items-center justify-center w-full my-6">
         <div className="w-full max-w-xl bg-gradient-to-b from-[#0e0c07] to-[#040406] border border-amber-500/20 p-8 md:p-10 rounded-3xl shadow-[0_0_60px_rgba(245,158,11,0.03)] relative overflow-hidden group">
-          
+
           {/* Top Border Highlights */}
           <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
           <div className="absolute top-0 left-6 right-6 h-[8px] bg-amber-400/[0.02] blur-sm rounded-full" />
-          
+
           <div className="absolute top-3 left-4 text-[7px] font-mono tracking-[0.3em] text-amber-500/40 font-bold uppercase">
             GET IN TOUCH
           </div>
@@ -79,12 +98,12 @@ export default function Contact({ onAddRequest }) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-              
+
               {/* Form Select Option */}
               <div className="space-y-1.5">
                 <label className="text-[9px] font-mono tracking-widest text-amber-400/80 font-bold uppercase block">Inquiry Type</label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={formMode}
                     onChange={(e) => setFormMode(e.target.value)}
                     className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/40 font-medium transition-all appearance-none cursor-pointer group-hover:border-white/[0.08]"
@@ -100,14 +119,14 @@ export default function Contact({ onAddRequest }) {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block">Your Name</label>
-                  <input 
+                  <input
                     type="text" name="name" required value={formData.name} onChange={handleChange} placeholder="e.g., John Doe"
                     className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 transition-all group-hover:border-white/[0.08]"
                   />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block">Email Address</label>
-                  <input 
+                  <input
                     type="email" name="email" required value={formData.email} onChange={handleChange} placeholder="name@domain.com"
                     className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 transition-all group-hover:border-white/[0.08]"
                   />
@@ -119,7 +138,7 @@ export default function Contact({ onAddRequest }) {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-in slide-in-from-top-2 duration-300">
                   <div className="sm:col-span-2 space-y-1.5">
                     <label className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block">Movie Title</label>
-                    <input 
+                    <input
                       type="text" name="movieTitle" required={formMode === "request"} value={formData.movieTitle} onChange={handleChange} placeholder="e.g., Interstellar"
                       className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 transition-all"
                     />
@@ -127,7 +146,7 @@ export default function Contact({ onAddRequest }) {
                   <div className="space-y-1.5">
                     <label className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block">Preferred Quality</label>
                     <div className="relative">
-                      <select 
+                      <select
                         name="quality" value={formData.quality} onChange={handleChange}
                         className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 focus:outline-none focus:border-amber-500/40 font-medium transition-all appearance-none cursor-pointer"
                       >
@@ -146,7 +165,7 @@ export default function Contact({ onAddRequest }) {
                 <label className="text-[9px] font-mono tracking-widest text-zinc-500 font-bold uppercase block">
                   {formMode === "request" ? "Additional Notes (Optional)" : "Message / Bug Description"}
                 </label>
-                <textarea 
+                <textarea
                   name="message" required={formMode === "feedback"} rows={3} value={formData.message} onChange={handleChange}
                   placeholder={formMode === "request" ? "Provide context like release year, specific directors, or alternative titles..." : "Please describe the problem or feature recommendation..."}
                   className="w-full bg-[#07070a] border border-white/[0.05] rounded-xl px-4 py-3.5 text-xs text-zinc-200 placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 resize-none transition-all"

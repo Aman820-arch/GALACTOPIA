@@ -121,3 +121,44 @@ export async function saveHistory(movie) {
 
   return await res.json();
 }
+
+// MOVIE REQUESTS
+
+export async function addMovieRequest(request) {
+  const res = await fetch(`${API_URL}/movie-requests/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  return await res.json();
+}
+
+export async function getMovieRequests() {
+  const res = await fetch(`${API_URL}/movie-requests/`);
+  return await res.json();
+}
+
+export async function updateMovieRequestStatus(email, movieTitle, status) {
+  const res = await fetch(
+    `${API_URL}/movie-requests/status?email=${encodeURIComponent(email)}&movieTitle=${encodeURIComponent(movieTitle)}&status=${encodeURIComponent(status)}`,
+    {
+      method: "PATCH",
+    }
+  );
+
+  return await res.json();
+}
+
+export async function deleteMovieRequest(email, movieTitle) {
+  const res = await fetch(
+    `${API_URL}/movie-requests/delete?email=${encodeURIComponent(email)}&movieTitle=${encodeURIComponent(movieTitle)}`,
+    {
+      method: "DELETE",
+    }
+  );
+
+  return await res.json();
+}
